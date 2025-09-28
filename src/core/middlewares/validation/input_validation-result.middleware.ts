@@ -7,4 +7,6 @@ export const idValidation = param('id')
     .withMessage('ID must be a string')
     .trim()
     .notEmpty()
-    .withMessage('ID must not be empty');
+    .withMessage('ID must not be empty')
+    .isMongoId()
+    .withMessage('Incorrect format of ObjectId');

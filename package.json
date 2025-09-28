@@ -4,8 +4,9 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
+    "build": "tsc",
     "watch": "tsc -w",
-    "dev": "nodemon --inspect dist/index.js",
+    "dev": "pnpm exec nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "jest": "jest -i",
     "lint": "eslint --fix .",
     "format": "prettier --write .",
@@ -13,8 +14,10 @@
   },
   "private": true,
   "dependencies": {
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "express-validator": "^7.2.1"
+    "express-validator": "^7.2.1",
+    "mongodb": "^6.20.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
@@ -31,6 +34,7 @@
     "prettier": "^3.6.2",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
 }

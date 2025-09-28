@@ -3,38 +3,42 @@ import {HttpStatus} from "../../../core/typesAny/http-statuses";
 import {PostInputDTO} from "../../dtoPosts/post-input-dto";
 import {Post} from "../../typesPosts/post";
 import {postsRepository} from "../../repositoriesPosts/posts.repository";
-import {PostViewDto} from "../../dtoPosts/post-view-dto";
-import {generateId} from "../../../core/utils/generateId";
 import {
     blogsRepository
 } from "../../../blogs/repositoriesBlogs/blogs.repository";
+import {mapToPostViewModel} from "../mappers/map-to-post-view-model.util";
 
-export function createPostHandler(
+export async function createPostHandler(
     req: Request<{}, {}, PostInputDTO>,
     res: Response,
 ) {
+try {
 
-    const blog = blogsRepository.findBlogById(req.body.blogId);
+    const blogId = req.body.blogId;
+
+    const blog = await blogsRepository.findBlogById(blogId);
+
     if (!blog) {
         res.status(HttpStatus.NotFound).send({
-            message: `Blog with id=${req.body.blogId} not found`,
+            message: `Blog with id=${blogId} not found`,
         });
         return;
     }
 
     const newPost: Post = {
-        id: generateId(),
         title: req.body.title,
         shortDescription: req.body.shortDescription,
         content: req.body.content,
         blogId: req.body.blogId,
         blogName: blog.name,
+        createdAt: new Date().toISOString(),
     }
 
-    postsRepository.createPost(newPost);
+    const createdPost = await postsRepository.createPost(newPost);
+    const postViewModel = mapToPostViewModel(createdPost)
 
-    const response:PostViewDto = newPost;
-
-    res.status(HttpStatus.Created).send(response);
-
+    res.status(HttpStatus.Created).send(postViewModel);
+}catch (e: unknown) {
+    res.sendStatus(HttpStatus.InternalServerError);
+}
 }

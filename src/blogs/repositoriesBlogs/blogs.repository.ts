@@ -1,44 +1,50 @@
 import { Blog } from "../typesBlogs/blog";
 import { BlogInputDto } from "../dtoBlogs/blog-input-dto";
-import {dbBlogs} from "../../db/in-memory.db";
+import {ObjectId, WithId} from "mongodb";
+import {blogCollection} from "../../db/mongo.db";
 
 export const blogsRepository = {
-    findAllBlogs(): Blog[] {
-        return dbBlogs.blogs;
+    async findAllBlogs(): Promise<WithId<Blog>[]> {
+        return blogCollection.find().toArray();
     },
 
-    findBlogById(id: string): Blog | null {
-        return dbBlogs.blogs.find((b) => b.id===id) ?? null;
+    async findBlogById(id: string): Promise<WithId<Blog> | null> {
+        return blogCollection.findOne({_id: new ObjectId(id)});
     },
 
-    createBlog(newBlog: Blog): Blog{
-        dbBlogs.blogs.push(newBlog);
-
-        return newBlog;
+    async createBlog(newBlog: Blog): Promise<WithId<Blog>>{
+        const insertResult = await blogCollection.insertOne(newBlog);
+        return { ...newBlog, _id: insertResult.insertedId};
     },
 
-    updateBlog(id: string, dto: BlogInputDto): void {
-        const blog = dbBlogs.blogs.find((b) => b.id===id);
+    async updateBlog(id: string, dto: BlogInputDto): Promise<void> {
+        const updateResult = await blogCollection.updateOne(
+            {
+                _id: new ObjectId(id),
+            },
+            {
+                $set: {
+                    name: dto.name,
+                    description: dto.description,
+                    websiteUrl: dto.websiteUrl,
+                },
+            },
+        );
 
-        if(!blog) {
-            throw new Error("Blog not found.");
+        if(updateResult.matchedCount < 1) {
+            throw new Error("No blog found.");
         }
-
-        blog.name = dto.name;
-        blog.description = dto.description;
-        blog.websiteUrl = dto.websiteUrl;
-
         return;
     },
 
-    deleteBlog(id: string): void {
-        const index = dbBlogs.blogs.findIndex((b) => b.id===id);
+    async deleteBlog(id: string): Promise<void> {
+        const deleteResult = await blogCollection.deleteOne({
+            _id: new ObjectId(id),
+        });
 
-        if(index === -1) {
+        if(deleteResult.deletedCount < 1) {
             throw new Error("Blog not found.");
         }
-
-        dbBlogs.blogs.splice(index, 1);
         return;
     },
 };
