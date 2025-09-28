@@ -8,19 +8,15 @@ const bootstrap = async () => {
     setupApp(app);
     const PORT = SETTINGS.PORT;
 
-    console.log("⏳ Trying to connect to DB...");
-    await runDB(SETTINGS.MONGO_URL || "mongodb://localhost:27017/lesson");
-    console.log("✅ DB connection success, starting server...");
+    if (!SETTINGS.MONGO_URL) {
+        throw new Error("MONGO_URL is not defined");
+    }
+    await runDB(SETTINGS.MONGO_URL);
 
     app.listen(PORT, () => {
-        console.log(`🚀 Example app listening on port ${PORT}`);
+        console.log(`Example app listening on port ${PORT}`);
     });
     return app;
 };
 
-bootstrap()
-.then(() => console.log("✅ Bootstrap finished"))
-    .catch((err) => {
-        console.error("❌ Bootstrap error:", err);
-        process.exit(1);
-    });
+bootstrap();
