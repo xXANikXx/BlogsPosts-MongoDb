@@ -4,6 +4,7 @@ import {setupApp} from "../../../src/setup-app";
 import {PostInputDTO} from "../../../src/posts/dtoPosts/post-input-dto";
 import {HttpStatus} from "../../../src/core/typesAny/http-statuses";
 import {generateBasicAuthToken} from "../../utils/generate-admin-auth-token";
+import {runDB, stopDb} from "../../../src/db/mongo.db";
 
 describe('Trying to set up Posts API', () => {
     const app = express();
@@ -18,14 +19,19 @@ describe('Trying to set up Posts API', () => {
     };
 
     beforeAll(async () => {
+        await runDB('mongodb+srv://nik:nik@lesson.mezyenu.mongodb.net/blogspostsapp?retryWrites=true&w=majority');
         await request(app)
-            .delete('/api/testing/all-data')
+            .delete('/testing/all-data')
             .expect(HttpStatus.NoContent);
+    });
+
+    afterAll(async () => {
+        await stopDb();
     });
 
     it('Example: if incorrect entered data', async () => {
         const invalidPostData1 = await request(app)
-            .post('/api/posts')
+            .post('/posts')
             .set('Authorization', adminToken)
             .send({
                 ...correctPostTestData,
@@ -41,7 +47,7 @@ describe('Trying to set up Posts API', () => {
 
     it('Example: if incorrect invalid blogId', async () => {
         const invalidPostData2 = await request(app)
-            .post('/api/posts')
+            .post('/posts')
             .set('Authorization', adminToken)
             .send({
                 ...correctPostTestData,
@@ -57,7 +63,7 @@ describe('Trying to set up Posts API', () => {
 
     it('Example: BlogId don`t exist', async () => {
         const response = await request(app)
-            .post('/api/posts')
+            .post('/posts')
             .set('Authorization', adminToken)
             .send({
                 ...correctPostTestData,

@@ -19,7 +19,7 @@ export async function deleteBlog(req: Request, res: Response) {
             return;
         }
 
-        blogsRepository.deleteBlog(id);
+        await blogsRepository.deleteBlog(id);
         res.sendStatus(HttpStatus.NoContent);
     } catch (e: unknown) {
         res.sendStatus(HttpStatus.InternalServerError);

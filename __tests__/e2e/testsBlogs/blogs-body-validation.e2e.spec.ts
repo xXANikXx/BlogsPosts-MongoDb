@@ -5,6 +5,7 @@ import {BlogInputDto} from "../../../src/blogs/dtoBlogs/blog-input-dto";
 import {HttpStatus} from "../../../src/core/typesAny/http-statuses";
 import {clearDb} from "../../utils/clear-db";
 import {generateBasicAuthToken} from "../../utils/generate-admin-auth-token";
+import {runDB, stopDb} from "../../../src/db/mongo.db";
 
 describe('Blogs API validation tests', () => {
     const app = express();
@@ -18,12 +19,17 @@ describe('Blogs API validation tests', () => {
     };
 
     beforeAll(async () => {
+        await runDB('mongodb+srv://nik:nik@lesson.mezyenu.mongodb.net/blogspostsapp?retryWrites=true&w=majority');
         await clearDb(app)
+    });
+
+    afterAll(async () => {
+        await stopDb();
     });
 
     it('Example: if incorrect entered data', async () => {
         const invalidData1 = await request(app)
-            .post('/api/blogs')
+            .post('/blogs')
             .set('Authorization', adminToken)
 
 
@@ -40,7 +46,7 @@ describe('Blogs API validation tests', () => {
 
     it('Example: incorrect name invalid data', async () => {
        const incalidData2 = await request(app)
-        .post('/api/blogs')
+        .post('/blogs')
            .set('Authorization', adminToken)
 
            .send({

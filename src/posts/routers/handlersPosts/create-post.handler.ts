@@ -7,6 +7,7 @@ import {
     blogsRepository
 } from "../../../blogs/repositoriesBlogs/blogs.repository";
 import {mapToPostViewModel} from "../mappers/map-to-post-view-model.util";
+import {ObjectId} from "mongodb";
 
 export async function createPostHandler(
     req: Request<{}, {}, PostInputDTO>,
@@ -15,6 +16,13 @@ export async function createPostHandler(
 try {
 
     const blogId = req.body.blogId;
+
+    if (!blogId || !ObjectId.isValid(blogId)) {
+        res.status(HttpStatus.NotFound).send({
+            message: `Blog with id=${blogId} not found`,
+        });
+        return;
+    }
 
     const blog = await blogsRepository.findBlogById(blogId);
 

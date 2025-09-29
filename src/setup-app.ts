@@ -6,7 +6,7 @@ import {postsRouter} from "./posts/routers/posts.router";
 
 
 
-export const setupApp = (app: Express) => {
+export const setupApp = async (app: Express) => {
     app.use(express.json());
 
     app.get("/", (_req, res) => {

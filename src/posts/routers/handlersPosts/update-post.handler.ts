@@ -11,7 +11,7 @@ export async function updatePostHandler(
 ) {
     try{
         const id = req.params.id;
-        const post = postsRepository.findPostById(id);
+        const post = await postsRepository.findPostById(id);
 
         if (!post) {
             res
