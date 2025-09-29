@@ -11,7 +11,7 @@ export async function updateBlogHandler(
 ) {
     try {
         const id = req.params.id;
-        const blog = blogsRepository.findBlogById(id)
+        const blog = await blogsRepository.findBlogById(id)
 
         if (!blog) {
             res.status(HttpStatus.NotFound).send(createErrorMessages([{
