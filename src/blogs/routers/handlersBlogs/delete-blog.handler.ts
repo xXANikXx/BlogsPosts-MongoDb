@@ -1,27 +1,18 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/typesAny/http-statuses";
-import { createErrorMessages } from "../../../core/utils/error.utils";
-import { blogsRepository } from "../../repositoriesBlogs/blogs.repository";
+import {blogsService} from "../../application/blogs.service";
+import {errorHandler} from "../../../core/errors/errors.handler";
 
-export async function deleteBlog(req: Request, res: Response) {
+
+export async function deleteBlogHandler(req: Request<{id: string}>, res: Response,) {
 
     try {
         const id = req.params.id;
-        const blog = await blogsRepository.findBlogById(id);
 
-        if (!blog) {
-            res
-                .status(HttpStatus.NotFound)
-                .send(createErrorMessages([{
-                    field: "id",
-                    message: "Blog not found"
-                }]));
-            return;
-        }
+        await blogsService.deleteBlog(id);
 
-        await blogsRepository.deleteBlog(id);
         res.sendStatus(HttpStatus.NoContent);
     } catch (e: unknown) {
-        res.sendStatus(HttpStatus.InternalServerError);
+        errorHandler(e, res);
     }
 }

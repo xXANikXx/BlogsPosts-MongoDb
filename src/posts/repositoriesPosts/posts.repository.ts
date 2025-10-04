@@ -1,23 +1,55 @@
-import { Post } from "../typesPosts/post";
-import {PostInputDTO} from "../dtoPosts/post-input-dto";
 import {ObjectId, WithId} from "mongodb";
 import {postCollection} from "../../db/mongo.db";
+import {Post} from "../domain/post";
+import {PostQueryInput} from "../routers/input/post-query.input";
+import {RepositoryNotFoundError} from "../../core/errors/repository-not-found.error";
+import {PostAttributes} from "../application/dtos/post-attributes";
+
 export const postsRepository = {
-    async findAllPosts(): Promise<WithId<Post>[]> {
-        return postCollection.find().toArray();
+    async findMany(
+        queryDto: PostQueryInput,
+    ): Promise<{ items: WithId<Post>[], totalCount: number }> {
+        const {
+            pageNumber,
+            pageSize,
+            sortBy,
+            sortDirection
+        } = queryDto;
+
+        const skip = (pageNumber - 1) * pageSize;
+        const filter: any = {};
+
+        const items = await postCollection
+            .find(filter)
+            .sort({[sortBy]: sortDirection})
+            .skip(skip)
+            .limit(pageSize)
+            .toArray()
+
+        const totalCount = await postCollection.countDocuments(filter)
+        return {items, totalCount};
+
     },
 
     async findPostById(id: string): Promise<WithId<Post> | null> {
         return postCollection.findOne({_id:new ObjectId(id) });
     },
 
-    async createPost(newPost: Post): Promise<WithId<Post>>{
-        const insertResult = await postCollection.insertOne(newPost);
-
-        return {...newPost, _id: insertResult.insertedId};
+    async findByIdOrFail(id:string): Promise<WithId<Post>> {
+        const res = await postCollection.findOne({_id:new ObjectId(id) });
+        if (!res) {
+            throw new RepositoryNotFoundError('Post not found');
+        }
+        return res;
     },
 
-    async updatePost(id: string, dto: PostInputDTO): Promise<void> {
+    async createPost(newPost: Post): Promise<string>{
+        const insertResult = await postCollection.insertOne(newPost);
+
+        return insertResult.insertedId.toString();
+    },
+
+    async updatePost(id: string, dto: PostAttributes): Promise<void> {
         const updateResult = await postCollection.updateOne({_id:new ObjectId(id)},
             {
                 $set: {
@@ -30,7 +62,7 @@ export const postsRepository = {
         );
 
         if(updateResult.matchedCount < 1) {
-            throw new Error("Post not found.");
+            throw new RepositoryNotFoundError("Post not found.");
         }
         return;
     },
@@ -42,8 +74,34 @@ export const postsRepository = {
             });
 
         if(deleteResult.deletedCount < 1) {
-            throw new Error("Post not found.");
+            throw new RepositoryNotFoundError("Post not found.");
         }
         return;
     },
-};
+
+    async findPostsByBlog(
+        queryDto: PostQueryInput,
+        blogId: string,
+    ): Promise<{ items: WithId<Post>[], totalCount: number }> {
+        const {
+            pageNumber,
+            pageSize,
+            sortBy,
+            sortDirection
+        } = queryDto;
+        const filter = {blogId};
+        const skip = (pageNumber - 1) * pageSize;
+
+        const [items, totalCount] = await Promise.all([
+            postCollection
+                .find(filter)
+                .sort({[sortBy]: sortDirection})
+                .skip(skip)
+                .limit(pageSize)
+                .toArray(),
+            postCollection.countDocuments(filter),
+        ]);
+        return {items, totalCount};
+    },
+
+    };

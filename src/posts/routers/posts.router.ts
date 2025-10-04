@@ -5,23 +5,24 @@ import {createPostHandler} from "./handlersPosts/create-post.handler";
 import {updatePostHandler} from "./handlersPosts/update-post.handler";
 import {deletePost} from "./handlersPosts/delete-post.handler";
 import {
-    idValidation
+    inputValidationResultMiddleware
 } from "../../core/middlewares/validation/input_validation-result.middleware";
 import {
-    inputValidationResultMiddleware
-} from "../../core/middlewares/validation/params-id.validation-middleware";
-import {
     postInputDtoValidation
-} from "../validationPosts/post.input-dto.validation";
+} from "./post.input-dto.validation";
 import {
     superAdminGuardMiddleware
-} from "../../../auth/middlewares/super-admin.guard-middleware";
-
+} from "../../auth/middlewares/super-admin.guard-middleware";
+import {idValidation} from "../../core/middlewares/validation/params-id.validation-middleware";
+import {
+    paginationAndSortingValidation
+} from "../../core/middlewares/validation/query-pagination-sorting.validation-middleware";
+import {PostSortField} from "./input/post-soft-field";
 
 export const postsRouter = Router({});
 
 postsRouter
-    .get('/', getPostListHandler)
+    .get('/', paginationAndSortingValidation(PostSortField), inputValidationResultMiddleware,getPostListHandler)
 
     .get('/:id' ,idValidation, inputValidationResultMiddleware, getPostHandler)
 

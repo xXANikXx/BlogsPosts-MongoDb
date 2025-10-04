@@ -1,15 +1,41 @@
 import {Request, Response} from "express";
-import {postsRepository} from "../../repositoriesPosts/posts.repository";
-import {HttpStatus} from "../../../core/typesAny/http-statuses";
-import {mapToPostViewModel} from "../mappers/map-to-post-view-model.util";
+import {errorHandler} from "../../../core/errors/errors.handler";
+import {PostQueryInput} from "../input/post-query.input";
+import {
+    setDefaultSortAndPaginationIfNotExist
+} from "../../../core/helpers/set-default-sort-and-pagination";
+import {
+    mapToPostListPaginatedOutput
+} from "../mappers/map-to-post-list-paginated-output.util";
+import {matchedData} from "express-validator";
+import {postService} from "../../application/posts.service";
 
-export async function getPostListHandler(_req: Request, res: Response) {
+
+export async function getPostListHandler(
+    _req: Request<{}, {}, {}, PostQueryInput>,
+    res: Response,
+    ) {
    try {
-        const posts = await postsRepository.findAllPosts();
-        const postViewModel = posts.map(mapToPostViewModel)
-        res.send(postViewModel);
+
+       const sanitizedQuery = matchedData<PostQueryInput>(_req, {
+           locations: ['query'],
+           includeOptionals: true,
+       });
+
+       const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery);
+
+       const {items, totalCount} = await postService.findMany(queryInput)
+
+       const postListOutput = mapToPostListPaginatedOutput(items, {
+           pageNumber: queryInput.pageNumber,
+           pageSize: queryInput.pageSize,
+           totalCount,
+       });
+
+
+        res.send(postListOutput);
 
     } catch (e: unknown) {
-       res.sendStatus(HttpStatus.InternalServerError);
+       errorHandler(e,res);
    }
 }

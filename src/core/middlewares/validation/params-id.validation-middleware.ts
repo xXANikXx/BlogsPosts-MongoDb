@@ -1,34 +1,19 @@
-import {NextFunction, Request, Response} from "express";
-import {HttpStatus} from "../../typesAny/http-statuses";
-import {ValidationErrorType} from "../../typesAny/validationError";
-import {ValidationErrorDto} from "../../typesAny/validationError.dto";
-import {FieldValidationError, validationResult, ValidationError} from "express-validator";
+import {body, param} from 'express-validator';
 
+export const idValidation = param('id')
+.exists()
+.withMessage('Id is required')
+.isString()
+.withMessage('Id must be a string')
+.isMongoId()
+.withMessage('Id incorrect format ObjectId')
 
-export const createErrorMessages = (errors: ValidationErrorType[]): ValidationErrorDto => {
-    return { errorsMessages: errors };
-};
-
-const formatErrors = (error: ValidationError): ValidationErrorType => {
-    const expressError = error as unknown as FieldValidationError;
-
-    return {
-        field: expressError.path,
-        message: expressError.msg,
-    };
-};
-
-export const inputValidationResultMiddleware = (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
-    const errors = validationResult(req).formatWith(formatErrors).array({ onlyFirstError: true });
-
-    if (errors.length > 0) {
-        res.status(HttpStatus.BadRequest).json({ errorsMessages: errors });
-        return;
+export const dataIdMatchValidation = body('data.id')
+.exists()
+.withMessage('Id in body is required')
+.custom((value, { req}) => {
+    if (value !== req?.params?.id){
+        throw new Error('Id in URL and body must match');
     }
-
-    next();
-};
+    return true;
+})
