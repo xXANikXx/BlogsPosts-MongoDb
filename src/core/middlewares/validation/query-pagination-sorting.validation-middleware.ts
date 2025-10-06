@@ -1,6 +1,6 @@
-import {SortDirection} from "../../typesAny/soft-diretction";
-import {PaginationAndSorting} from "../../typesAny/pagination-and-sorting";
-import {query} from "express-validator";
+import { SortDirection } from "../../typesAny/soft-diretction";
+import { PaginationAndSorting } from "../../typesAny/pagination-and-sorting";
+import { query } from "express-validator";
 
 
 const DEFAULT_PAGE_NUMBER = 1;
@@ -15,7 +15,7 @@ export const paginationAndSortingDefault: PaginationAndSorting<string> = {
     sortDirection: DEFAULT_SORT_DIRECTION,
 };
 
-export function paginationAndSortingValidation< T extends string >(
+export function paginationAndSortingValidation<T extends string>(
     sortFieldEnum: Record<string, T>,
 ) {
     const allowedSortFields = Object.values(sortFieldEnum);
@@ -24,14 +24,14 @@ export function paginationAndSortingValidation< T extends string >(
         query('pageNumber')
             .optional()
             .default(DEFAULT_PAGE_NUMBER)
-            .isInt({min: 1})
+            .isInt({ min: 1 })
             .withMessage('Page number must be a positive integer')
             .toInt(),
 
         query('pageSize')
             .optional()
             .default(DEFAULT_PAGE_SIZE)
-            .isInt({min: 1, max: 100})
+            .isInt({ min: 1, max: 100 })
             .withMessage('Page size must be between 1 and 100')
             .toInt(),
 
@@ -44,10 +44,11 @@ export function paginationAndSortingValidation< T extends string >(
             ),
 
         query('sortDirection')
-        .optional()
-        .default(DEFAULT_SORT_DIRECTION)
+            .optional()
+            .default(DEFAULT_SORT_DIRECTION)
             .isIn(Object.values(SortDirection))
-            .withMessage('`Sort direction must be one of: ${Object.values(SortDirection).join(\', \')}`,')
+            .withMessage(`Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`
+            )
 
     ];
 }

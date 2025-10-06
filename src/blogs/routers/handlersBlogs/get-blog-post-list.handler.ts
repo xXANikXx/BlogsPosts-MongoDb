@@ -11,6 +11,9 @@ export async function getBlogPostListHandler(
     req: Request<{ id: string }, {}, {}, PostQueryInput>,
     res: Response,
 ) {
+
+    console.log('🔥 GET /blogs/:id/posts called', req.params, req.query);
+
     try {
         const blogId = req.params.id;
         const queryInput = req.query;
@@ -27,6 +30,8 @@ export async function getBlogPostListHandler(
         });
         res.status(HttpStatus.Ok).send(postListOutput);
     } catch (e: unknown) {
+
         errorHandler(e, res);
+
     }
 }

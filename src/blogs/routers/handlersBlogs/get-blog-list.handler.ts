@@ -22,6 +22,7 @@ export async function getBlogListHandler(
 
         const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery)
 
+
         const { items, totalCount } = await blogsService.findMany(queryInput)
 
         const blogListOutput = mapToBlogListPaginatedOutput(items, {
