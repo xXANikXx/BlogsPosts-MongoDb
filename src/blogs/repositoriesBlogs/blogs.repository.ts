@@ -1,9 +1,10 @@
-import {ObjectId, WithId} from "mongodb";
-import {blogCollection} from "../../db/mongo.db";
+import { ObjectId, WithId } from "mongodb";
+import { blogCollection } from "../../db/mongo.db";
 import { Blog } from "../domain/blog";
-import {BlogQueryInput} from "../routers/input/blog-query.input";
-import {RepositoryNotFoundError} from "../../core/errors/repository-not-found.error";
-import {BlogAttributes} from "../application/dtos/blog-attributes";
+import { BlogQueryInput } from "../routers/input/blog-query.input";
+import { RepositoryNotFoundError } from "../../core/errors/repository-not-found.error";
+import { BlogAttributes } from "../application/dtos/blog-attributes";
+import { SortDirection } from "../../core/typesAny/soft-diretction"
 
 export const blogsRepository = {
     async findMany(
@@ -21,34 +22,34 @@ export const blogsRepository = {
         const filter: any = {};
 
         if (searchNameTerm) {
-            filter.name = {$regex: searchNameTerm, $options: "i"};
+            filter.name = { $regex: searchNameTerm, $options: "i" };
         }
 
         const items = await blogCollection
             .find(filter)
-            .sort({[sortBy]: sortDirection})
+            .sort({ [sortBy]: sortDirection === SortDirection.Asc ? 1 : -1 })
             .skip(skip)
             .limit(pageSize)
             .toArray()
 
         const totalCount = await blogCollection.countDocuments(filter)
-        return {items, totalCount};
+        return { items, totalCount };
     },
 
 
     async findBlogById(id: string): Promise<WithId<Blog> | null> {
-        return blogCollection.findOne({_id: new ObjectId(id)});
+        return blogCollection.findOne({ _id: new ObjectId(id) });
     },
 
-    async findByIdOrFail(id: string): Promise<WithId<Blog>>{
-        const res = await blogCollection.findOne({_id: new ObjectId(id)});
+    async findByIdOrFail(id: string): Promise<WithId<Blog>> {
+        const res = await blogCollection.findOne({ _id: new ObjectId(id) });
         if (!res) {
             throw new RepositoryNotFoundError('Blog not exist');
         }
         return res;
-        },
+    },
 
-    async createBlog(newBlog: Blog): Promise<string>{
+    async createBlog(newBlog: Blog): Promise<string> {
         const insertResult = await blogCollection.insertOne(newBlog);
         return insertResult.insertedId.toString();
     },
@@ -67,7 +68,7 @@ export const blogsRepository = {
             },
         );
 
-        if(updateResult.matchedCount < 1) {
+        if (updateResult.matchedCount < 1) {
             throw new RepositoryNotFoundError("No blog found.");
         }
         return;
@@ -78,7 +79,7 @@ export const blogsRepository = {
             _id: new ObjectId(id),
         });
 
-        if(deleteResult.deletedCount < 1) {
+        if (deleteResult.deletedCount < 1) {
             throw new RepositoryNotFoundError("Blog not found.");
         }
         return;

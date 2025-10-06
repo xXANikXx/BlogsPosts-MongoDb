@@ -24,7 +24,7 @@ import { BlogSortField } from "./input/blog-soft-field";
 import {
     createPostByBlogHandler
 } from "./handlersBlogs/post-blog-post-list.handler";
-
+import { postInputDtoValidation } from "../../posts/routers/post.input-dto.validation";
 
 export const blogsRouter = Router({});
 
@@ -41,4 +41,4 @@ blogsRouter
 
     .get('/:id/posts', idValidation, paginationAndSortingValidation(PostSortField), inputValidationResultMiddleware, getBlogPostListHandler)
 
-    .post('/:id/posts', superAdminGuardMiddleware, idValidation, inputValidationResultMiddleware, createPostByBlogHandler)
+    .post('/:id/posts', superAdminGuardMiddleware, idValidation, postInputDtoValidation, inputValidationResultMiddleware, createPostByBlogHandler)
