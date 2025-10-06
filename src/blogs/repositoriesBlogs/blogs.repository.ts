@@ -4,7 +4,6 @@ import { Blog } from "../domain/blog";
 import { BlogQueryInput } from "../routers/input/blog-query.input";
 import { RepositoryNotFoundError } from "../../core/errors/repository-not-found.error";
 import { BlogAttributes } from "../application/dtos/blog-attributes";
-import { SortDirection } from "../../core/typesAny/soft-diretction"
 
 export const blogsRepository = {
     async findMany(
@@ -27,7 +26,7 @@ export const blogsRepository = {
 
         const items = await blogCollection
             .find(filter)
-            .sort({ [sortBy]: sortDirection === SortDirection.Asc ? 1 : -1 })
+            .sort({ [sortBy]: sortDirection })
             .skip(skip)
             .limit(pageSize)
             .toArray()

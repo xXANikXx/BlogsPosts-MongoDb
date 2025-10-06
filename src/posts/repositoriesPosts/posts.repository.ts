@@ -23,7 +23,7 @@ export const postsRepository = {
 
         const items = await postCollection
             .find(filter)
-            .sort({ [sortBy]: sortDirection === SortDirection.Asc ? 1 : -1 })
+            .sort({ [sortBy]: sortDirection })
             .skip(skip)
             .limit(pageSize)
             .toArray()
@@ -97,7 +97,7 @@ export const postsRepository = {
         const [items, totalCount] = await Promise.all([
             postCollection
                 .find(filter)
-                .sort({ [sortBy]: sortDirection === SortDirection.Asc ? 1 : -1 })
+                .sort({ [sortBy]: sortDirection })
                 .skip(skip)
                 .limit(pageSize)
                 .toArray(),
