@@ -8,9 +8,7 @@ import { PostQueryInput } from "../../../posts/routers/input/post-query.input";
 import { HttpStatus } from "../../../core/typesAny/http-statuses";
 import { matchedData } from "express-validator";
 import { BlogQueryInput } from "../input/blog-query.input";
-import {
-    setDefaultSortAndPaginationIfNotExist
-} from "../../../core/helpers/set-default-sort-and-pagination";
+
 
 export async function getBlogPostListHandler(
     req: Request<{ id: string }, {}, {}, PostQueryInput>,
@@ -20,17 +18,8 @@ export async function getBlogPostListHandler(
 
     try {
         const blogId = req.params.id;
+        const queryInput = req.query;
 
-        const sanitizedQuery = matchedData<PostQueryInput>(req, {
-            locations: ['query'],
-            includeOptionals: true,
-        });
-
-        const queryInput = setDefaultSortAndPaginationIfNotExist({
-            ...sanitizedQuery,
-            pageNumber: Number(sanitizedQuery.pageNumber),
-            pageSize: Number(sanitizedQuery.pageSize),
-        });
 
         const { items, totalCount } = await postService.findPostsByBlog(
             queryInput,

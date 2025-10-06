@@ -12,21 +12,11 @@ import {
 import { HttpStatus } from "../../../core/typesAny/http-statuses";
 
 export async function getBlogListHandler(
-    req: Request<{}, {}, {}, BlogQueryInput>,
+    _req: Request<{}, {}, {}, BlogQueryInput>,
     res: Response,) {
     try {
-        const sanitizedQuery = matchedData<BlogQueryInput>(req, {
-            locations: ['query'],
-            includeOptionals: true,
-        });
 
-        const queryInput = setDefaultSortAndPaginationIfNotExist({
-            ...sanitizedQuery,
-            pageNumber: Number(sanitizedQuery.pageNumber),
-            pageSize: Number(sanitizedQuery.pageSize),
-        }
-        )
-
+        const queryInput = setDefaultSortAndPaginationIfNotExist(_req.query)
 
         const { items, totalCount } = await blogsService.findMany(queryInput)
 

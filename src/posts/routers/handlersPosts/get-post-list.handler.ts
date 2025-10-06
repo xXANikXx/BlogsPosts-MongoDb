@@ -17,16 +17,10 @@ export async function getPostListHandler(
 ) {
     try {
 
-        const sanitizedQuery = matchedData<PostQueryInput>(_req, {
-            locations: ['query'],
-            includeOptionals: true,
-        });
 
-        const queryInput = setDefaultSortAndPaginationIfNotExist({
-            ...sanitizedQuery,
-            pageNumber: Number(sanitizedQuery.pageNumber),
-            pageSize: Number(sanitizedQuery.pageSize),
-        });
+        const queryInput = setDefaultSortAndPaginationIfNotExist(
+            _req.query,
+        );
 
         const { items, totalCount } = await postService.findMany(queryInput)
 
