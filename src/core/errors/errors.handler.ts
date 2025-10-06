@@ -1,45 +1,42 @@
-import {Response} from 'express';
-import {RepositoryNotFoundError} from "./repository-not-found.error";
+import { Response } from 'express';
+import { RepositoryNotFoundError } from "./repository-not-found.error";
 import {
     createErrorMessages
 } from "../middlewares/validation/input_validation-result.middleware";
-import {HttpStatus} from "../typesAny/http-statuses";
-import {DomainError} from "./domain.error";
+import { HttpStatus } from "../typesAny/http-statuses";
+import { DomainError } from "./domain.error";
 
 
 export function errorHandler(error: unknown, res: Response): void {
     if (error instanceof RepositoryNotFoundError) {
-        const httpStatus = HttpStatus.NotFound;
-
-        res.status(httpStatus).send(
-            createErrorMessages([
+        res.status(HttpStatus.NotFound).send({
+            errors: [
                 {
-                status: httpStatus,
-                detail: error.message,
-            },
-            ]),
-        );
-
+                    message: error.message,
+                    field: 'id',
+                },
+            ],
+        });
         return;
     }
 
     if (error instanceof DomainError) {
-        const httpStatus = HttpStatus.UnprocessableEntity;
-
-        res.status(httpStatus).send(
-            createErrorMessages([
+        res.status(HttpStatus.UnprocessableEntity).send({
+            errors: [
                 {
-                    status: httpStatus,
-                    source: error.source,
-                    detail: error.message,
-                    code: error.code,
+                    message: error.message,
+                    field: error.field,
                 },
-            ]),
-        );
-
+            ],
+        });
         return;
     }
 
-    res.status(HttpStatus.InternalServerError);
-    return;
+    res.status(HttpStatus.InternalServerError).send({
+        errors: [
+            {
+                message: 'Internal server error',
+            },
+        ],
+    });
 }
