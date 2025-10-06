@@ -20,7 +20,12 @@ export async function getBlogListHandler(
             includeOptionals: true,
         });
 
-        const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery)
+        const queryInput = setDefaultSortAndPaginationIfNotExist({
+            ...sanitizedQuery,
+            pageNumber: Number(sanitizedQuery.pageNumber),
+            pageSize: Number(sanitizedQuery.pageSize),
+        }
+        )
 
 
         const { items, totalCount } = await blogsService.findMany(queryInput)

@@ -22,7 +22,11 @@ export async function getPostListHandler(
             includeOptionals: true,
         });
 
-        const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery);
+        const queryInput = setDefaultSortAndPaginationIfNotExist({
+            ...sanitizedQuery,
+            pageNumber: Number(sanitizedQuery.pageNumber),
+            pageSize: Number(sanitizedQuery.pageSize),
+        });
 
         const { items, totalCount } = await postService.findMany(queryInput)
 

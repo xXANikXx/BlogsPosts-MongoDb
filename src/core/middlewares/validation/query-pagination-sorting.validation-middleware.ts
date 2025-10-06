@@ -22,21 +22,21 @@ export function paginationAndSortingValidation<T extends string>(
 
     return [
         query('pageNumber')
-            .optional()
+            .optional({ values: 'falsy' })
             .default(DEFAULT_PAGE_NUMBER)
             .isInt({ min: 1 })
             .withMessage('Page number must be a positive integer')
             .toInt(),
 
         query('pageSize')
-            .optional()
+            .optional({ values: 'falsy' })
             .default(DEFAULT_PAGE_SIZE)
             .isInt({ min: 1, max: 100 })
             .withMessage('Page size must be between 1 and 100')
             .toInt(),
 
         query('sortBy')
-            .optional()
+            .optional({ values: 'falsy' })
             .default(Object.values(sortFieldEnum)[0])
             .isIn(allowedSortFields)
             .withMessage(
@@ -44,10 +44,11 @@ export function paginationAndSortingValidation<T extends string>(
             ),
 
         query('sortDirection')
-            .optional()
+            .optional({ values: 'falsy' })
             .default(DEFAULT_SORT_DIRECTION)
             .isIn(Object.values(SortDirection))
-            .withMessage(`Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`
+            .withMessage(
+                `Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`,
             )
 
     ];
