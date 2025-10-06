@@ -1,10 +1,10 @@
-import {Request,Response} from "express";
-import {errorHandler} from "../../../core/errors/errors.handler";
-import {postService} from "../../application/posts.service";
-import {mapToPostOutput} from "../mappers/map-to-post-output.utill";
+import { Request, Response } from "express";
+import { errorHandler } from "../../../core/errors/errors.handler";
+import { postService } from "../../application/posts.service";
+import { mapToPostOutput } from "../mappers/map-to-post-output.utill";
+import { HttpStatus } from "../../../core/typesAny/http-statuses";
 
-
-export async function getPostHandler (req: Request, res: Response){
+export async function getPostHandler(req: Request, res: Response) {
     try {
         const id = req.params.id;
 
@@ -12,8 +12,8 @@ export async function getPostHandler (req: Request, res: Response){
 
         const postOutput = mapToPostOutput(post)
 
-        res.send(postOutput);
+        res.status(HttpStatus.Ok).send(postOutput);
     } catch (e: unknown) {
-        errorHandler(e,res);
+        errorHandler(e, res);
     }
 }
