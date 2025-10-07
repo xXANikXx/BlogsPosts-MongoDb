@@ -32,6 +32,12 @@ export function errorHandler(error: unknown, res: Response): void {
         return;
     }
 
+
+    if (error instanceof Error) {
+        console.error('Error Stack:', error.stack);
+    }
+
+    // Ошибка 500 Internal Server Error
     res.status(HttpStatus.InternalServerError).send({
         errors: [
             {

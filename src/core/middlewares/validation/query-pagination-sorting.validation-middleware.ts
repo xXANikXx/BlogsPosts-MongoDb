@@ -3,8 +3,8 @@ import { PaginationAndSorting } from "../../typesAny/pagination-and-sorting";
 import { query } from "express-validator";
 
 
-const DEFAULT_PAGE_NUMBER = 1;
-const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_PAGE_NUMBER = 1;
+export const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_SORT_DIRECTION = SortDirection.Desc;
 const DEFAULT_SORT_BY = 'createdAt';
 

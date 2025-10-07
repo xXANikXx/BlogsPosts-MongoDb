@@ -85,6 +85,8 @@ export const postsRepository = {
         queryDto: PostQueryInput,
         blogId: string,
     ): Promise<{ items: WithId<Post>[], totalCount: number }> {
+
+
         const {
             pageNumber,
             pageSize,
@@ -92,17 +94,22 @@ export const postsRepository = {
             sortDirection
         } = queryDto;
         const filter = { 'blogId': blogId };
-        const skip = (pageNumber - 1) * pageSize;
+        const numericPageSize = Number(pageSize);
+        const skip = (Number(pageNumber) - 1) * numericPageSize;
+
+        // Преобразование sortDirection в 1 или -1 для надежности в MongoDB
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
 
         const [items, totalCount] = await Promise.all([
             postCollection
                 .find(filter)
-                .sort({ [sortBy]: sortDirection })
+                .sort({ [sortBy]: sortValue })
                 .skip(skip)
-                .limit(pageSize)
+                .limit(numericPageSize)
                 .toArray(),
             postCollection.countDocuments(filter),
         ]);
+
         return { items, totalCount };
     },
 

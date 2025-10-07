@@ -25,6 +25,8 @@ import {
     createPostByBlogHandler
 } from "./handlersBlogs/post-blog-post-list.handler";
 import { createPostByBlogValidation } from "../../posts/routers/post.input-dto.validation";
+import { POSTS_PATH } from "../../core/paths/paths";
+
 
 export const blogsRouter = Router({});
 
@@ -39,6 +41,6 @@ blogsRouter
 
     .delete('/:id', superAdminGuardMiddleware, idValidation, inputValidationResultMiddleware, deleteBlogHandler)
 
-    .get('/:id/posts', idValidation, paginationAndSortingValidation(PostSortField), inputValidationResultMiddleware, getBlogPostListHandler)
+    .get(`/:id${POSTS_PATH}`, idValidation, paginationAndSortingValidation(PostSortField), inputValidationResultMiddleware, getBlogPostListHandler)
 
-    .post('/:id/posts', superAdminGuardMiddleware, idValidation, createPostByBlogValidation, inputValidationResultMiddleware, createPostByBlogHandler)
+    .post(`/:id${POSTS_PATH}`, superAdminGuardMiddleware, idValidation, createPostByBlogValidation, inputValidationResultMiddleware, createPostByBlogHandler)

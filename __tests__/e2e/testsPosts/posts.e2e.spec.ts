@@ -1,176 +1,214 @@
 import request from 'supertest';
 import express from 'express';
 import { setupApp } from "../../../src/setup-app";
-import { PostInputDTO } from "../../../src/posts/dtoPosts/post-input-dto";
-import { BlogViewDto } from "../../../src/blogs/dtoBlogs/blog-view-dto";
 import { HttpStatus } from "../../../src/core/typesAny/http-statuses";
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
 import { clearDb } from "../../utils/clear-db";
-import {runDB} from "../../../src/db/mongo.db";
+import { runDB, stopDb } from "../../../src/db/mongo.db";
+import { createPost } from '../../utils/posts/create-post';
+import { createBlog } from '../../utils/blogs/create-blog';
+import { POSTS_PATH } from '../../../src/core/paths/paths';
+import { PostUpdateInput } from '../../../src/posts/routers/input/post-update.input'
+import { PostAttributes } from '../../../src/posts/application/dtos/post-attributes';
+import { BLOGS_PATH } from '../../../src/core/paths/paths';
+import { PostOutput } from '../../../src/posts/routers/output/post.output';
+import { postCollection } from '../../../src/db/mongo.db';
+import { ObjectId } from 'mongodb';
 
 describe('Posts API (e2e)', () => {
     const app = express();
     setupApp(app);
     const adminToken = generateBasicAuthToken();
 
-    let newBlog: BlogViewDto; // ✅ Используем BlogViewDto, чтобы TS видел id
-
-    const correctPostInput: PostInputDTO = {
-        title: 'NewJeans all music',
-        shortDescription: 'Super Shy',
-        content: 'music',
-        blogId: '', // заполним после создания блога
-    };
+    let newBlog: any;
 
     beforeAll(async () => {
-        // очищаем базу
         await runDB('mongodb+srv://nik:nik@lesson.mezyenu.mongodb.net/blogspostsapp?retryWrites=true&w=majority');
         await clearDb(app);
 
-        // создаём блог для тестов
-        const blogResponse = await request(app)
-            .post('/blogs')
-            .set('Authorization', adminToken)
-            .send({
-                name: "K-pop Blog",
-                description: "All about NewJeans",
-                websiteUrl: "https://newjeans.kr",
-            })
-            .expect(HttpStatus.Created);
-
-        newBlog = blogResponse.body; // ✅ теперь это BlogViewDto
-        correctPostInput.blogId = newBlog.id; // TS больше не ругается
+        // Создаём блог для постов
+        newBlog = await createBlog(app);
     });
 
-    it('Should create a new post if blog exists', async () => {
-        const newPostInput: PostInputDTO = {
-            title: 'NewJeans all music',
-            shortDescription: 'Super Shy',
-            content: 'music',
+    afterAll(async () => {
+        await stopDb();
+    });
+
+    it('✅ should create a new post', async () => {
+        const postInput: PostUpdateInput = {
+            title: 'NewJeans music',
+            shortDescription: 'Cool with you',
+            content: 'Music content',
             blogId: newBlog.id,
         };
 
         const response = await request(app)
-            .post('/posts')
+            .post(POSTS_PATH)
             .set('Authorization', adminToken)
-            .send(newPostInput)
+            .send(postInput)
             .expect(HttpStatus.Created);
 
         expect(response.body).toEqual({
             id: expect.any(String),
-            title: newPostInput.title,
-            shortDescription: newPostInput.shortDescription,
-            content: newPostInput.content,
+            title: postInput.title,
+            shortDescription: postInput.shortDescription,
+            content: postInput.content,
             blogId: newBlog.id,
             blogName: newBlog.name,
-            createdAt: expect.any(String),   // автоматически генерируется в handler
+            createdAt: expect.any(String),
         });
     });
 
     it('Should return 404 if blog does not exist', async () => {
+        const fakeBlogId = new ObjectId().toString();
+
         const response = await request(app)
             .post('/posts')
-            .set('Authorization', adminToken)
+            .set('Authorization', generateBasicAuthToken()) // <- добавляем авторизацию
             .send({
                 title: 'Test Post',
                 shortDescription: 'Short desc',
-                content: 'Some content',
-                blogId: '99999', // несуществующий блог
+                content: 'Content here',
+                blogId: fakeBlogId,
             })
             .expect(HttpStatus.NotFound);
 
-        expect(response.body.message).toBe('Blog with id=99999 not found');
+        // 3. Проверяем тело ответа
+        expect(response.body.errors).toHaveLength(1);
+        expect(response.body.errors[0].message).toBe('Blog not exist');
+        expect(response.body.errors[0].field).toBe('id');
     });
 
     it('Should return list of posts', async () => {
-        await request(app)
-            .post('/posts')
-            .set('Authorization', adminToken)
-            .send({ ...correctPostInput, title: 'Itzy' })
-            .expect(HttpStatus.Created);
+        // Создаём несколько постов
+        await createPost(app);
+        await createPost(app);
 
-        await request(app)
-            .post('/posts')
-            .set('Authorization', adminToken)
-            .send({ ...correctPostInput, title: 'Aespa' })
-            .expect(HttpStatus.Created);
-
-        const postsListResponse = await request(app)
-            .get('/posts')
+        const response = await request(app)
+            .get(POSTS_PATH)
             .set('Authorization', adminToken)
             .expect(HttpStatus.Ok);
 
-        expect(Array.isArray(postsListResponse.body)).toBe(true);
-        expect(postsListResponse.body.length).toBeGreaterThanOrEqual(2);
+        expect(Array.isArray(response.body.items)).toBe(true);
+        expect(response.body.items.length).toBeGreaterThanOrEqual(2);
+
     });
 
-    it('Should return post by Id', async () => {
-        const createResponse = await request(app)
-            .post('/posts')
-            .set('Authorization', adminToken)
-            .send({ ...correctPostInput, title: 'IU singer' })
-            .expect(HttpStatus.Created);
-
-        const getResponse = await request(app)
-            .get(`/posts/${createResponse.body.id}`)
-            .set('Authorization', adminToken)
-            .expect(HttpStatus.Ok);
-
-        expect(getResponse.body).toEqual({
-            ...createResponse.body,
-            id: expect.any(String),
-        });
-    });
 
     it('Should update post, PUT', async () => {
-        const createResponse = await request(app)
-            .post('/posts')
-            .set('Authorization', adminToken)
-            .send({ ...correctPostInput, title: 'IU singer' })
-            .expect(HttpStatus.Created);
+        const createdPost = await createPost(app);
 
-        const postInput: PostInputDTO = {
-            title: 'NewJeans music',
-            shortDescription: 'Cool with you',
-            content: 'music',
+        const postUpdate: PostUpdateInput = {
+            title: 'Updated Title',
+            shortDescription: 'Updated short',
+            content: 'Updated content',
             blogId: newBlog.id,
         };
 
         await request(app)
-            .put(`/posts/${createResponse.body.id}`)
+            .put(`${POSTS_PATH}/${createdPost.id}`)
             .set('Authorization', adminToken)
-            .send(postInput)
+            .send(postUpdate)
             .expect(HttpStatus.NoContent);
 
-        const postResponse = await request(app)
-            .get(`/posts/${createResponse.body.id}`)
+        const response = await request(app)
+            .get(`${POSTS_PATH}/${createdPost.id}`)
             .set('Authorization', adminToken)
             .expect(HttpStatus.Ok);
 
-        expect(postResponse.body).toEqual({
-            ...postInput,
-            id: createResponse.body.id,
+        expect(response.body).toEqual({
+            id: createdPost.id,
+            title: postUpdate.title,
+            shortDescription: postUpdate.shortDescription,
+            content: postUpdate.content,
+            blogId: newBlog.id,
             blogName: newBlog.name,
             createdAt: expect.any(String),
         });
     });
 
     it('Should delete post', async () => {
-        const createResponse = await request(app)
-            .post('/posts')
-            .set('Authorization', adminToken)
-            .send({ ...correctPostInput, title: 'IU singer' })
-            .expect(HttpStatus.Created);
+        const createdPost = await createPost(app);
 
         await request(app)
-            .delete(`/posts/${createResponse.body.id}`)
+            .delete(`${POSTS_PATH}/${createdPost.id}`)
             .set('Authorization', adminToken)
             .expect(HttpStatus.NoContent);
 
-        const postResponse = await request(app)
-            .get(`/posts/${createResponse.body.id}`)
-            .set('Authorization', adminToken);
-
-        expect(postResponse.status).toBe(HttpStatus.NotFound);
+        await request(app)
+            .get(`${POSTS_PATH}/${createdPost.id}`)
+            .set('Authorization', adminToken)
+            .expect(HttpStatus.NotFound);
     });
+
+
+    // it('Should return post by Id', async () => {
+    //     const createResponse = await request(app)
+    //         .post('/posts')
+    //         .set('Authorization', adminToken)
+    //         .send({ ...correctPostInput, title: 'IU singer' })
+    //         .expect(HttpStatus.Created);
+
+    //     const getResponse = await request(app)
+    //         .get(`/posts/${createResponse.body.id}`)
+    //         .set('Authorization', adminToken)
+    //         .expect(HttpStatus.Ok);
+
+    //     expect(getResponse.body).toEqual({
+    //         ...createResponse.body,
+    //         id: expect.any(String),
+    //     });
+    // });
+
+    // it('Should update post, PUT', async () => {
+    //     const createResponse = await request(app)
+    //         .post('/posts')
+    //         .set('Authorization', adminToken)
+    //         .send({ ...correctPostInput, title: 'IU singer' })
+    //         .expect(HttpStatus.Created);
+
+    //     const postInput: PostInputDTO = {
+    //         title: 'NewJeans music',
+    //         shortDescription: 'Cool with you',
+    //         content: 'music',
+    //         blogId: newBlog.id,
+    //     };
+
+    //     await request(app)
+    //         .put(`/posts/${createResponse.body.id}`)
+    //         .set('Authorization', adminToken)
+    //         .send(postInput)
+    //         .expect(HttpStatus.NoContent);
+
+    //     const postResponse = await request(app)
+    //         .get(`/posts/${createResponse.body.id}`)
+    //         .set('Authorization', adminToken)
+    //         .expect(HttpStatus.Ok);
+
+    //     expect(postResponse.body).toEqual({
+    //         ...postInput,
+    //         id: createResponse.body.id,
+    //         blogName: newBlog.name,
+    //         createdAt: expect.any(String),
+    //     });
+    // });
+
+    // it('Should delete post', async () => {
+    //     const createResponse = await request(app)
+    //         .post('/posts')
+    //         .set('Authorization', adminToken)
+    //         .send({ ...correctPostInput, title: 'IU singer' })
+    //         .expect(HttpStatus.Created);
+
+    //     await request(app)
+    //         .delete(`/posts/${createResponse.body.id}`)
+    //         .set('Authorization', adminToken)
+    //         .expect(HttpStatus.NoContent);
+
+    //     const postResponse = await request(app)
+    //         .get(`/posts/${createResponse.body.id}`)
+    //         .set('Authorization', adminToken);
+
+    //     expect(postResponse.status).toBe(HttpStatus.NotFound);
+    // });
 });

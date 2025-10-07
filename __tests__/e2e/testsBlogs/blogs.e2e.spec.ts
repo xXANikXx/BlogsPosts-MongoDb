@@ -1,130 +1,149 @@
 import request from 'supertest';
-import express, {Express} from 'express';
-import {setupApp} from "../../../src/setup-app";
-import {BlogInputDto} from "../../../src/blogs/dtoBlogs/blog-input-dto";
-import {HttpStatus} from "../../../src/core/typesAny/http-statuses";
-import {generateBasicAuthToken} from "../../utils/generate-admin-auth-token";
-import {clearDb} from "../../utils/clear-db";
-import {runDB, stopDb} from "../../../src/db/mongo.db";
-import {SETTINGS} from "../../../src/core/settings/settings";
+import express, { Express } from 'express';
+import { setupApp } from "../../../src/setup-app";
+import { HttpStatus } from "../../../src/core/typesAny/http-statuses";
+import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
+import { clearDb } from "../../utils/clear-db";
+import { runDB, stopDb } from "../../../src/db/mongo.db";
+import { SETTINGS } from "../../../src/core/settings/settings";
+import { createBlog } from '../../utils/blogs/create-blog';
+import { getBlogDto } from '../../utils/blogs/get-blog-dto';
+import { BLOGS_PATH } from '../../../src/core/paths/paths';
+import { getBlogById } from '../../utils/blogs/get-blog-by-id';
+import { BlogAttributes } from '../../../src/blogs/application/dtos/blog-attributes';
+import { updateBlog } from '../../utils/blogs/update-blog';
+import { BlogUpdateInput } from '../../../src/blogs/routers/input/blog-update.input';
+import { createPost } from '../../utils/posts/create-post';
+import { PostOutput } from '../../../src/posts/routers/output/post.output';
 
-describe('Trying to set up Blogs API ', () => {
+describe('Trying to set up Blogs API', () => {
     const app = express();
     setupApp(app);
-
     const adminToken = generateBasicAuthToken();
 
-const testBlogData: BlogInputDto = {
- name: 'Nikita',
-    description: 'the new blog about API',
-    websiteUrl: 'https://youtube.com/watch'
-}
     beforeAll(async () => {
-
-        await runDB('mongodb+srv://nik:nik@lesson.mezyenu.mongodb.net/blogspostsapp?retryWrites=true&w=majority');  // 1. подключаем БД
-        await clearDb(app);               // 3. чистим коллекции
+        await runDB('mongodb+srv://nik:nik@lesson.mezyenu.mongodb.net/blogspostsapp?retryWrites=true&w=majority');
+        await clearDb(app);
     });
 
+    afterAll(async () => {
+        await stopDb();
+    });
 
-it('Should create a new blog POST request', async () => {
-    const newBlogInput: BlogInputDto = {
-        name: 'Bob',
-        description: 'Bob`s new blog about k-pop',
-        websiteUrl: 'https://www.youtube.com/watch',
-    };
-    await request(app)
-        .post('/blogs')
-        .set('Authorization', adminToken)
-        .send(newBlogInput)
-        .expect(HttpStatus.Created);
-});
-
-it('Should return blogs list of blogs', async () => {
-    await request(app)
-        .post('/blogs')
-        .set('Authorization', adminToken)
-        .send({...testBlogData, name: 'Nikita1'})
-        .expect(HttpStatus.Created);
-
-    await request(app)
-        .post('/blogs')
-        .set('Authorization', adminToken)
-        .send({...testBlogData, name: 'Nikita2'})
-        .expect(HttpStatus.Created);
-
-    const blogsListResponse = await request(app)
-        .get('/blogs')
-        .set('Authorization', adminToken)
-        .expect(HttpStatus.Ok);
-
-    expect(blogsListResponse.body).toBeInstanceOf(Array);
-    expect(blogsListResponse.body.length).toBeGreaterThanOrEqual(2);
-
-});
-
-    it('Should return blog by Id', async () => {
-        const createResponse = await request(app)
-            .post('/blogs')
-            .set('Authorization', adminToken)
-            .send({...testBlogData, name: 'Nikita1'})
-            .expect(HttpStatus.Created);
-
-        const getResponse = await request(app)
-            .get(`/blogs/${createResponse.body.id}`)
-            .set('Authorization', adminToken)
-            .expect(HttpStatus.Ok);
-
-        expect(getResponse.body).toEqual({
-            ...createResponse.body,
-            id: expect.any(String),
+    it('Should create a new blog POST request', async () => {
+        await createBlog(app, {
+            ...getBlogDto(),
+            name: 'Bob',
+            description: 'Bob`s new blog about k-pop',
+            websiteUrl: 'https://www.youtube.com/watch',
         });
     });
 
-it('Should update a blog, PUT', async () => {
-    const createResponse = await request(app)
-    .post('/blogs')
-        .set('Authorization', adminToken)
-        .send({...testBlogData, name: 'Nikita1'})
-        .expect(HttpStatus.Created);
+    it('Should return blogs list of blogs', async () => {
+        await Promise.all([createBlog(app), createBlog(app)]);
 
-    const blogInput: BlogInputDto = {
-        name: 'New UpdateName',
-        description: 'NewName`s new blog about k-pop',
-        websiteUrl: 'https://www.youtube.com/watch/api/blogs',
-    };
+        const response = await request(app)
+            .get(BLOGS_PATH)
+            .set('Authorization', adminToken)
+            .expect(HttpStatus.Ok);
 
-    await request(app)
-        .put(`/blogs/${createResponse.body.id}`)
-        .set('Authorization', adminToken)
-        .send(blogInput)
-        .expect(HttpStatus.NoContent);
+        expect(Array.isArray(response.body.items)).toBe(true);
+        expect(response.body.items.length).toBeGreaterThanOrEqual(2);
+        response.body.items.forEach((blog: { id: string }) => {
+            expect(blog.id).toBeDefined();
+        });
+    });
 
-    const blogResponse = await request(app)
-        .get(`/blogs/${createResponse.body.id}`)
-.set('Authorization', adminToken)
-    expect(blogResponse.body).toEqual({...blogInput,
-    id: createResponse.body.id,
-        createdAt: expect.any(String),
-        isMembership: expect.any(Boolean),
-    })
+    it('Should return blog by Id', async () => {
+        const createdBlog = await createBlog(app);
+        const createdBlogId = createdBlog.id;
+
+        const blog = await getBlogById(app, createdBlogId);
+
+        expect(blog).toEqual({
+            id: createdBlog.id,
+            name: createdBlog.name,
+            description: createdBlog.description,
+            websiteUrl: createdBlog.websiteUrl,
+            createdAt: expect.any(String),
+            isMembership: expect.any(Boolean),
+        });
+    });
+
+    it('Should update a blog, PUT', async () => {
+        const createdBlog = await createBlog(app);
+        const createdBlogId = createdBlog.id;
+
+        const blogUpdateData: BlogUpdateInput = {
+            name: 'New UpdateName',
+            description: 'NewName`s new blog about k-pop',
+            websiteUrl: 'https://www.youtube.com/watch/api/blogs',
+        };
+
+        await request(app)
+            .put(`${BLOGS_PATH}/${createdBlogId}`)
+            .set('Authorization', adminToken)
+            .send(blogUpdateData)
+            .expect(HttpStatus.NoContent);
+
+        const blogResponse = await getBlogById(app, createdBlogId);
+
+        expect(blogResponse).toEqual({
+            id: createdBlogId,
+            name: 'New UpdateName',
+            description: 'NewName`s new blog about k-pop',
+            websiteUrl: 'https://www.youtube.com/watch/api/blogs',
+            createdAt: expect.any(String),
+            isMembership: expect.any(Boolean),
+        });
+    });
+
+    it('Delete', async () => {
+        const createdBlog = await createBlog(app);
+        const createdBlogId = createdBlog.id;
+
+        await request(app)
+            .delete(`${BLOGS_PATH}/${createdBlogId}`)
+            .set('Authorization', adminToken)
+            .expect(HttpStatus.NoContent);
+
+        await request(app)
+            .get(`${BLOGS_PATH}/${createdBlogId}`)
+            .set('Authorization', adminToken)
+            .expect(HttpStatus.NotFound);
+    });
+
+    it('Should return paginated posts for a specific blog', async () => {
+        const blog = await createBlog(app);
+
+        const totalPosts = 5;
+        await Promise.all(
+            Array.from({ length: totalPosts }, (_, i) =>
+                createPost(app, {
+                    title: `Post ${i + 1}`,
+                    shortDescription: `Short ${i + 1}`,
+                    content: `Content ${i + 1}`,
+                    blogId: blog.id,
+                })
+            )
+        );
+
+        const pageNumber = 1;
+        const pageSize = 5;
+
+        const response = await request(app)
+            .get(`${BLOGS_PATH}/${blog.id}/posts`)
+            .query({ pageNumber, pageSize })
+            .expect(HttpStatus.Ok);
+
+        const posts: PostOutput[] = response.body.items;
+        expect(posts.length).toBe(pageSize);
+        posts.forEach(post => {
+            expect(post.blogId).toBe(blog.id);
+        });
+
+        expect(response.body.totalCount).toBe(totalPosts);
+        expect(response.body.pageNumber).toBe(pageNumber);
+        expect(response.body.pageSize).toBe(pageSize);
+    });
 });
-
-it('Delete', async () => {
-    const response = await request(app)
-        .post('/blogs')
-        .set('Authorization', adminToken)
-        .send({...testBlogData, name: 'Nikita3'})
-        .expect(HttpStatus.Created);
-
-    await request(app)
-        .delete(`/blogs/${response.body.id}`)
-        .set('Authorization', adminToken)
-        .expect(HttpStatus.NoContent);
-
-    const blogResponse = await request(app)
-        .get(`/blogs/${response.body.id}`)
-        .set('Authorization', adminToken)
-        expect(blogResponse.status).toBe(HttpStatus.NotFound);
-});
-});
-

@@ -6,16 +6,11 @@ import { errorHandler } from "../../../core/errors/errors.handler";
 import { postService } from "../../../posts/application/posts.service";
 import { PostQueryInput } from "../../../posts/routers/input/post-query.input";
 import { HttpStatus } from "../../../core/typesAny/http-statuses";
-import { matchedData } from "express-validator";
-import { BlogQueryInput } from "../input/blog-query.input";
-
 
 export async function getBlogPostListHandler(
     req: Request<{ id: string }, {}, {}, PostQueryInput>,
     res: Response,
 ) {
-
-
     try {
         const blogId = req.params.id;
         const queryInput = req.query;
@@ -26,9 +21,10 @@ export async function getBlogPostListHandler(
             blogId,
         );
 
+
         const postListOutput = mapToPostListPaginatedOutput(items, {
-            pageNumber: queryInput.pageNumber,
-            pageSize: queryInput.pageSize,
+            pageNumber: Number(queryInput.pageNumber),
+            pageSize: Number(queryInput.pageSize),
             totalCount,
         });
 
