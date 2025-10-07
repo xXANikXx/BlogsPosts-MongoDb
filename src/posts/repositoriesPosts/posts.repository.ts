@@ -21,14 +21,16 @@ export const postsRepository = {
         const numericPageSize = Number(pageSize);
         const numericPageNumber = Number(pageNumber);
 
-        const skip = (numericPageNumber - 1) * numericPageSize;
-        const sortValue = sortDirection === 'asc' ? 1 : -1;
 
+        const skip = (numericPageNumber - 1) * numericPageSize;
+        const sortField = sortBy || 'createdAt';
+
+        const sortValue = sortDirection === SortDirection.Asc ? 1 : -1;
         const filter: any = {};
 
         const items = await postCollection
             .find(filter)
-            .sort({ [sortBy]: sortValue })
+            .sort({ [sortField]: sortValue })
             .skip(skip)
             .limit(numericPageSize)
             .toArray()
