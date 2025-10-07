@@ -105,18 +105,17 @@ export const postsRepository = {
 
 
         // Преобразование sortDirection в 1 или -1 для надежности в MongoDB
-        const sortValue = sortDirection === 'asc' ? 1 : -1;
-
-        const filter = { 'blogId': blogId };
+        const sortValue = sortDirection === SortDirection.Asc ? 1 : -1;
+        const blogFilter = { blogId: blogId };
 
         const [items, totalCount] = await Promise.all([
             postCollection
-                .find(filter)
+                .find(blogFilter)
                 .sort({ [sortBy]: sortValue })
                 .skip(skip)
                 .limit(numericPageSize)
                 .toArray(),
-            postCollection.countDocuments(filter),
+            postCollection.countDocuments(blogFilter),
         ]);
 
         return { items, totalCount };
