@@ -22,7 +22,7 @@ export const postsRepository = {
         const numericPageNumber = Number(pageNumber);
 
         const skip = (numericPageNumber - 1) * numericPageSize;
-        const sortValue = queryDto.sortDirection === SortDirection.Asc ? 1 : -1;
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
 
         const filter: any = {};
 
@@ -105,7 +105,7 @@ export const postsRepository = {
 
 
         // Преобразование sortDirection в 1 или -1 для надежности в MongoDB
-        const sortValue = queryDto.sortDirection === SortDirection.Asc ? 1 : -1;
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
 
         const filter = { 'blogId': blogId };
 

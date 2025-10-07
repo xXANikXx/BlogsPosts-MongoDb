@@ -20,6 +20,9 @@ export async function getBlogPostListHandler(
         const pageNumber = Number(queryInput.pageNumber) || DEFAULT_PAGE_NUMBER;
         const pageSize = Number(queryInput.pageSize) || DEFAULT_PAGE_SIZE;
 
+        queryInput.pageNumber = pageNumber;
+        queryInput.pageSize = pageSize;
+
         const { items, totalCount } = await postService.findPostsByBlog(
             queryInput,
             blogId,

@@ -24,14 +24,14 @@ export async function getPostListHandler(
             _req.query,
         );
 
-        const pageNumber = Number(queryInput.pageNumber) || DEFAULT_PAGE_NUMBER;
-        const pageSize = Number(queryInput.pageSize) || DEFAULT_PAGE_SIZE;
+        queryInput.pageNumber = Number(queryInput.pageNumber) || DEFAULT_PAGE_NUMBER;
+        queryInput.pageSize = Number(queryInput.pageSize) || DEFAULT_PAGE_SIZE;
 
         const { items, totalCount } = await postService.findMany(queryInput)
 
         const postListOutput = mapToPostListPaginatedOutput(items, {
-            pageNumber: pageNumber, // Используем проверенное число
-            pageSize: pageSize,     // Используем проверенное число
+            pageNumber: queryInput.pageNumber,
+            pageSize: queryInput.pageSize,
             totalCount,
         });
 

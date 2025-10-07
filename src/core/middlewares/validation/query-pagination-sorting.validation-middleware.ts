@@ -37,7 +37,7 @@ export function paginationAndSortingValidation<T extends string>(
 
         query('sortBy')
             .optional({ values: 'falsy' })
-            .default(Object.values(sortFieldEnum)[0])
+            .default(DEFAULT_SORT_BY)
             .isIn(allowedSortFields)
             .withMessage(
                 `Invalid sort field. Allowed values: ${allowedSortFields.join(', ')}`,
