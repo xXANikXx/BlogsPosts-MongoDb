@@ -17,21 +17,25 @@ export const blogsRepository = {
             searchNameTerm,
         } = queryDto;
 
-        const skip = (pageNumber - 1) * pageSize;
+        const numericPageSize = Number(pageSize);
+        const skip = (Number(pageNumber) - 1) * numericPageSize;
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
         const filter: any = {};
 
         if (searchNameTerm) {
             filter.name = { $regex: searchNameTerm, $options: "i" };
         }
 
-        const items = await blogCollection
-            .find(filter)
-            .sort({ [sortBy]: sortDirection })
-            .skip(skip)
-            .limit(pageSize)
-            .toArray()
+        const [items, totalCount] = await Promise.all([
+            blogCollection
+                .find(filter)
+                .sort({ [sortBy]: sortValue })
+                .skip(skip)
+                .limit(numericPageSize) // <- ИСПОЛЬЗУЙТЕ ЧИСЛО!
+                .toArray(),
+            blogCollection.countDocuments(filter),
+        ]);
 
-        const totalCount = await blogCollection.countDocuments(filter)
         return { items, totalCount };
     },
 

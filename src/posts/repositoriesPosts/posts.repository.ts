@@ -93,12 +93,16 @@ export const postsRepository = {
             sortBy,
             sortDirection
         } = queryDto;
-        const filter = { 'blogId': blogId };
+
         const numericPageSize = Number(pageSize);
         const skip = (Number(pageNumber) - 1) * numericPageSize;
 
+
+
         // Преобразование sortDirection в 1 или -1 для надежности в MongoDB
         const sortValue = sortDirection === 'asc' ? 1 : -1;
+
+        const filter = { 'blogId': blogId };
 
         const [items, totalCount] = await Promise.all([
             postCollection

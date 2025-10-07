@@ -1,6 +1,6 @@
-import {WithId} from "mongodb";
-import {Blog} from "../../domain/blog";
-import {BlogListPaginatedOutput} from "../output/blog-list-paginated.output";
+import { WithId } from "mongodb";
+import { Blog } from "../../domain/blog";
+import { BlogListPaginatedOutput } from "../output/blog-list-paginated.output";
 
 
 export function mapToBlogListPaginatedOutput(
