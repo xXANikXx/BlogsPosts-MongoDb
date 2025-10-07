@@ -18,14 +18,19 @@ export const postsRepository = {
             sortDirection
         } = queryDto;
 
-        const skip = (pageNumber - 1) * pageSize;
+        const numericPageSize = Number(pageSize);
+        const numericPageNumber = Number(pageNumber);
+
+        const skip = (numericPageNumber - 1) * numericPageSize;
+        const sortValue = queryDto.sortDirection === SortDirection.Asc ? 1 : -1;
+
         const filter: any = {};
 
         const items = await postCollection
             .find(filter)
-            .sort({ [sortBy]: sortDirection })
+            .sort({ [sortBy]: sortValue })
             .skip(skip)
-            .limit(pageSize)
+            .limit(numericPageSize)
             .toArray()
 
         const totalCount = await postCollection.countDocuments(filter)
@@ -100,7 +105,7 @@ export const postsRepository = {
 
 
         // Преобразование sortDirection в 1 или -1 для надежности в MongoDB
-        const sortValue = sortDirection === 'asc' ? 1 : -1;
+        const sortValue = queryDto.sortDirection === SortDirection.Asc ? 1 : -1;
 
         const filter = { 'blogId': blogId };
 
