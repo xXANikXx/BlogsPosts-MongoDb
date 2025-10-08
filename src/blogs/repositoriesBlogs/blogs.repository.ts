@@ -17,17 +17,20 @@ export const blogsRepository = {
             searchNameTerm,
         } = queryDto;
 
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
+
+
         const skip = (pageNumber - 1) * pageSize;
         const filter: any = {};
 
         if (searchNameTerm) {
 
-            filter.name = { $regex: `.*${searchNameTerm}.*`, $options: "i" };
+            filter.name = filter.name = { $regex: searchNameTerm, $options: "i" };;
         }
 
         const items = await blogCollection
             .find(filter)
-            .sort({ [sortBy]: sortDirection })
+            .sort({ [sortBy]: sortValue })
             .skip(skip)
             .limit(pageSize)
             .toArray();
