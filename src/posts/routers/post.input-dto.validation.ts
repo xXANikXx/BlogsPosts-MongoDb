@@ -30,6 +30,7 @@ const blogIdValidation = body('blogId')
 
 export const blogIdParamValidation = param('id')
     .isString()
+    .withMessage('BlogId must be a string')
     .trim()
     .notEmpty()
     .withMessage('BlogId must be a string');

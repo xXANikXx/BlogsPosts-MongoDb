@@ -253,4 +253,51 @@ describe('Trying to set up Blogs API', () => {
         expect(res.body.errorsMessages).toBeUndefined();
     });
 
+    it('should check query validation manually', async () => {
+
+
+        // пробуем заведомо неправильный запрос
+        const response = await request(app)
+            .get('/blogs')
+            .query({
+                pageNumber: 'abc',
+                sortDirection: 'wrong',
+                sortBy: 'name',
+                pageSize: 5,
+                searchNameTerm: 'Tim',
+            });
+
+        console.log('STATUS:', response.status);
+        console.log('BODY:', response.body);
+
+        expect(response.status).toBe(200); // или 400, если тестируешь ошибку
+    });
+
+
+    it('should return blogs with pagination', async () => {
+
+        // создаем 12 блогов
+        for (let i = 0; i < 12; i++) {
+            await createBlog(app, { name: `Tim${i}`, description: 'desc', websiteUrl: 'https://someurl.com' });
+        }
+
+        const response = await request(app)
+            .get('/blogs')
+            .query({
+                pageSize: 5,
+                pageNumber: 1,
+                searchNameTerm: 'Tim',
+                sortDirection: 'asc',
+                sortBy: 'name',
+            })
+            .expect(200);
+
+        console.log('DATA:', response.body);
+
+        expect(response.body.pageSize).toBe(5);
+        expect(response.body.page).toBe(1);
+        expect(response.body.items.length).toBeLessThanOrEqual(5);
+    });
+
+
 });

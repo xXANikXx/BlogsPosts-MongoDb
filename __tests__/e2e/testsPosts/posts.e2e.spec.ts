@@ -141,6 +141,25 @@ describe('Posts API (e2e)', () => {
             .expect(HttpStatus.NotFound);
     });
 
+    it('should debug GET /posts query params', async () => {
+
+
+        const response = await request(app)
+            .get('/posts')
+            .query({
+                pageNumber: 1,
+                pageSize: 5,
+                sortBy: 'createdAt', // проверь, что именно это поле есть в enum PostSortField
+                sortDirection: 'asc',
+            });
+
+        console.log('STATUS:', response.status);
+        console.log('BODY:', response.body);
+
+        expect(response.status).toBe(200);
+    });
+
+
 
     // it('Should return post by Id', async () => {
     //     const createResponse = await request(app)

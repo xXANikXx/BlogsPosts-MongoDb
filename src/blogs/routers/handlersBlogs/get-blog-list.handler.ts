@@ -18,16 +18,18 @@ export async function getBlogListHandler(
     res: Response,) {
     try {
 
-        const queryInput = setDefaultSortAndPaginationIfNotExist(_req.query)
-
-        const pageNumber = Number(queryInput.pageNumber) || DEFAULT_PAGE_NUMBER;
-        const pageSize = Number(queryInput.pageSize) || DEFAULT_PAGE_SIZE;
+        const sanitizedQuery = matchedData<BlogQueryInput>(_req, {
+            locations: ['query'],
+            includeOptionals: true,
+        }); //утилита для извечения трансформированных значений после валидатара
+        //в req.query остаются сырые квери параметры (строки)
+        const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery);
 
         const { items, totalCount } = await blogsService.findMany(queryInput)
 
         const blogListOutput = mapToBlogListPaginatedOutput(items, {
-            pageNumber: pageNumber, // Используем проверенное число
-            pageSize: pageSize,     // Используем проверенное число
+            pageNumber: queryInput.pageNumber,
+            pageSize: queryInput.pageSize,
             totalCount,
         });
 

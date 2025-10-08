@@ -21,8 +21,16 @@ export function paginationAndSortingValidation<T extends string>(
     const allowedSortFields = Object.values(sortFieldEnum);
 
     return [
-        query('pageNumber')
+
+        query('searchNameTerm')
             .optional()
+            .isString()
+            .withMessage('Search name term must be a string')
+            .trim(),
+
+
+        query('pageNumber')
+            .optional({ values: 'falsy' })
             .default(DEFAULT_PAGE_NUMBER)
             .toInt()
             .isInt({ min: 1 })
@@ -47,9 +55,8 @@ export function paginationAndSortingValidation<T extends string>(
 
         query('sortDirection')
             .optional({ values: 'falsy' })
-            .default(DEFAULT_SORT_DIRECTION.toLowerCase())
-            .trim()
-            .toLowerCase()
+            .customSanitizer((value) => value?.toLowerCase())
+            .default(DEFAULT_SORT_DIRECTION)
             .isIn(Object.values(SortDirection))
             .withMessage(
                 `Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`,
