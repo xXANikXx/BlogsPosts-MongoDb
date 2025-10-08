@@ -8,10 +8,12 @@ export function mapToBlogListPaginatedOutput(
     meta: { pageNumber: number; pageSize: number; totalCount: number }
 ): BlogListPaginatedOutput {
 
+    console.log('🔍 PAGINATION META:', meta);
+
     const pagesCount =
         (meta.pageSize > 0)
             ? Math.ceil(meta.totalCount / meta.pageSize)
-            : 0; // Если pageSize <= 0, страниц нет.
+            : 0;
 
     return {
         pagesCount: pagesCount,

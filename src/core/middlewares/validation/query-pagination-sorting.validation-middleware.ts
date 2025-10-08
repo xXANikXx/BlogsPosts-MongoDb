@@ -31,35 +31,35 @@ export function paginationAndSortingValidation<T extends string>(
 
         query('pageNumber')
             .optional({ values: 'falsy' })
-            .default(DEFAULT_PAGE_NUMBER)
             .toInt()
             .isInt({ min: 1 })
-            .withMessage('Page number must be a positive integer'),
+            .withMessage('Page number must be a positive integer')
+            .default(DEFAULT_PAGE_NUMBER),
 
         query('pageSize')
             .optional({ values: 'falsy' })
-            .default(DEFAULT_PAGE_SIZE)
             .toInt()
             .isInt({ min: 1, max: 100 })
-            .withMessage('Page size must be between 1 and 100'),
+            .withMessage('Page size must be between 1 and 100')
+            .default(DEFAULT_PAGE_SIZE),
 
         query('sortBy')
             .optional({ values: 'falsy' })
             .trim()
-            .default(DEFAULT_SORT_BY)
             .isIn(allowedSortFields)
             .withMessage(
                 `Invalid sort field. Allowed values: ${allowedSortFields.join(', ')}`,
-            ),
+            )
+            .default(DEFAULT_SORT_BY),
 
         query('sortDirection')
             .optional({ values: 'falsy' })
             .trim()
-            .default(DEFAULT_SORT_DIRECTION)
             .isIn(['asc', 'desc'])
             .withMessage(
                 `Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`,
             )
+            .default(DEFAULT_SORT_DIRECTION),
 
     ];
 }
