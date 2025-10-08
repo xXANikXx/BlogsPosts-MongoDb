@@ -193,4 +193,64 @@ describe('Trying to set up Blogs API', () => {
 
         expect(response.body.errorsMessages.length).toBeGreaterThan(0);
     });
+
+
+    it('should return blogs with correct pagination and sorting', async () => {
+        // 1. Создаём пару блогов
+        await createBlog(app);
+        await createBlog(app);
+
+        // 2. Отправляем GET-запрос с пагинацией
+        const res = await request(app)
+            .get('/blogs')
+            .query({
+                pageNumber: 1,
+                pageSize: 1,
+                sortBy: 'createdAt',
+                sortDirection: 'desc',
+            })
+            .expect(HttpStatus.Ok);
+
+        // 3. Проверяем ключевые поля
+        expect(res.body).toEqual(
+            expect.objectContaining({
+                pagesCount: expect.any(Number),
+                page: 1,
+                pageSize: 1,
+                totalCount: expect.any(Number),
+                items: expect.any(Array),
+            }),
+        );
+
+        // 4. Можно проверить и конкретные значения
+        expect(res.body.items.length).toBe(1);
+        expect(res.body.pageSize).toBe(1);
+        expect(res.body.page).toBe(1);
+    });
+
+    it('should return valid pagination response', async () => {
+        const res = await request(app)
+            .get('/blogs')
+            .query({
+                pageNumber: 1,
+                pageSize: 2,
+                sortBy: 'createdAt',
+                sortDirection: 'desc',
+            })
+            .expect(HttpStatus.Ok);
+
+        expect(res.body).toEqual(
+            expect.objectContaining({
+                pagesCount: expect.any(Number),
+                page: 1,
+                pageSize: 2,
+                totalCount: expect.any(Number),
+                items: expect.any(Array),
+            }),
+        );
+
+        // Проверим, что ошибок нет:
+        expect(res.body.errorsMessages).toBeUndefined();
+    });
+
 });

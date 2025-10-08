@@ -30,6 +30,12 @@ export const inputValidationResultMiddleware = (
     res: Response,
     next: NextFunction,
 ) => {
+
+    console.log('QUERY PARAMS:', req.query);
+    console.log('BODY:', req.body);
+    console.log('PARAMS:', req.params);
+
+
     const errors = validationResult(req)
         .formatWith(formatValidationErrors).
         array({ onlyFirstError: true });
