@@ -273,7 +273,14 @@ describe('Trying to set up Blogs API', () => {
         console.log('STATUS:', response.status);
         console.log('BODY:', response.body);
 
-        expect(response.status).toBe(200); // или 400, если тестируешь ошибку
+        expect(response.status).toBe(400); // или 400, если тестируешь ошибку
+        expect(response.body.errorsMessages).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    field: 'sortDirection',
+                    message: 'Sort direction must be one of: asc, desc',
+                }),]),
+        );
     });
 
 

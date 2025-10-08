@@ -17,9 +17,12 @@ export const blogsRepository = {
             searchNameTerm,
         } = queryDto;
 
+        const finalPageNumber = parseInt(pageNumber as any, 10);
+        const finalPageSize = parseInt(pageSize as any, 10);
+
         const sortValue = sortDirection === 'asc' ? 1 : -1;
 
-        const skip = (pageNumber - 1) * pageSize;
+        const skip = (finalPageNumber - 1) * pageSize;
         const filter: any = {};
 
         if (searchNameTerm && searchNameTerm.trim() !== '') {
@@ -33,7 +36,7 @@ export const blogsRepository = {
             .find(filter)
             .sort({ [sortBy]: sortValue })
             .skip(skip)
-            .limit(pageSize)
+            .limit(finalPageSize)
             .toArray();
 
         const totalCount = await blogCollection.countDocuments(filter);
