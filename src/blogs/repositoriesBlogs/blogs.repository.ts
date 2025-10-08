@@ -12,8 +12,8 @@ export const blogsRepository = {
         const {
             pageNumber,
             pageSize,
-            sortBy,
-            sortDirection,
+            sortBy = 'createdAt',
+            sortDirection = 'desc',
             searchNameTerm,
         } = queryDto;
 
@@ -22,7 +22,7 @@ export const blogsRepository = {
 
         const sortValue = sortDirection === 'asc' ? 1 : -1;
 
-        const skip = (finalPageNumber - 1) * pageSize;
+        const skip = (finalPageNumber - 1) * finalPageSize;
         const filter: any = {};
 
         if (searchNameTerm && searchNameTerm.trim() !== '') {
