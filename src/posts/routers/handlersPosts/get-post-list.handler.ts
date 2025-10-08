@@ -18,16 +18,14 @@ export async function getPostListHandler(
     res: Response,
 ) {
     try {
-
-
-        const queryInput = setDefaultSortAndPaginationIfNotExist(
-            _req.query,
-        );
-
-        queryInput.pageNumber = Number(queryInput.pageNumber) || DEFAULT_PAGE_NUMBER;
-        queryInput.pageSize = Number(queryInput.pageSize) || DEFAULT_PAGE_SIZE;
+        const sanitizedQuery = matchedData<PostQueryInput>(_req, {
+            locations: ['query'],
+            includeOptionals: true,
+        });
+        const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery);
 
         const { items, totalCount } = await postService.findMany(queryInput)
+
 
         const postListOutput = mapToPostListPaginatedOutput(items, {
             pageNumber: queryInput.pageNumber,

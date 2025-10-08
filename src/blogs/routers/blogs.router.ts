@@ -31,7 +31,7 @@ import { POSTS_PATH } from "../../core/paths/paths";
 export const blogsRouter = Router({});
 
 blogsRouter
-    .get("/", paginationAndSortingValidation(BlogSortField), getBlogListHandler, inputValidationResultMiddleware)
+    .get("/", paginationAndSortingValidation(BlogSortField), inputValidationResultMiddleware, getBlogListHandler)
 
     .get('/:id', idValidation, inputValidationResultMiddleware, getBlogHandler)
 

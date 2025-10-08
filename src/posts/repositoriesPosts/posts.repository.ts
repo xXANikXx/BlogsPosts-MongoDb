@@ -4,7 +4,7 @@ import { Post } from "../domain/post";
 import { PostQueryInput } from "../routers/input/post-query.input";
 import { RepositoryNotFoundError } from "../../core/errors/repository-not-found.error";
 import { PostAttributes } from "../application/dtos/post-attributes";
-import { SortDirection } from "../../core/typesAny/soft-diretction";
+import { SortDirection } from "../../core/typesAny/sort-diretction";
 
 
 export const postsRepository = {
@@ -18,24 +18,18 @@ export const postsRepository = {
             sortDirection
         } = queryDto;
 
-        const numericPageSize = Number(pageSize);
-        const numericPageNumber = Number(pageNumber);
+        const filter = {};
+        const skip = (pageNumber - 1) * pageSize;
 
-
-        const skip = (numericPageNumber - 1) * numericPageSize;
-        const sortField = sortBy || 'createdAt';
-
-        const sortValue = sortDirection === SortDirection.Asc ? 1 : -1;
-        const filter: any = {};
-
-        const items = await postCollection
-            .find(filter)
-            .sort({ [sortField]: sortValue })
-            .skip(skip)
-            .limit(numericPageSize)
-            .toArray()
-
-        const totalCount = await postCollection.countDocuments(filter)
+        const [items, totalCount] = await Promise.all([
+            postCollection
+                .find(filter)
+                .sort({ [sortBy]: sortDirection })
+                .skip(skip)
+                .limit(pageSize)
+                .toArray(),
+            postCollection.countDocuments(filter),
+        ]);
         return { items, totalCount };
 
     },
@@ -101,25 +95,19 @@ export const postsRepository = {
             sortDirection
         } = queryDto;
 
-        const numericPageSize = Number(pageSize);
-        const skip = (Number(pageNumber) - 1) * numericPageSize;
+        const filter = { 'blogId': blogId };
+        const skip = (pageNumber - 1) * pageSize;
 
-
-
-        // Преобразование sortDirection в 1 или -1 для надежности в MongoDB
-        const sortValue = sortDirection === SortDirection.Asc ? 1 : -1;
-        const blogFilter = { blogId: blogId };
 
         const [items, totalCount] = await Promise.all([
             postCollection
-                .find(blogFilter)
-                .sort({ [sortBy]: sortValue })
+                .find(filter)
+                .sort({ [sortBy]: sortDirection })
                 .skip(skip)
-                .limit(numericPageSize)
+                .limit(pageSize)
                 .toArray(),
-            postCollection.countDocuments(blogFilter),
+            postCollection.countDocuments(filter),
         ]);
-
         return { items, totalCount };
     },
 

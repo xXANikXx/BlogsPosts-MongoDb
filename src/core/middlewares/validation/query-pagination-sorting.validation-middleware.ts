@@ -1,4 +1,4 @@
-import { SortDirection } from "../../typesAny/soft-diretction";
+import { SortDirection } from "../../typesAny/sort-diretction";
 import { PaginationAndSorting } from "../../typesAny/pagination-and-sorting";
 import { query } from "express-validator";
 
@@ -37,6 +37,7 @@ export function paginationAndSortingValidation<T extends string>(
 
         query('sortBy')
             .optional({ values: 'falsy' })
+            .trim()
             .default(DEFAULT_SORT_BY)
             .isIn(allowedSortFields)
             .withMessage(
@@ -46,7 +47,7 @@ export function paginationAndSortingValidation<T extends string>(
         query('sortDirection')
             .optional({ values: 'falsy' })
             .default(DEFAULT_SORT_DIRECTION)
-            .isIn(Object.values(SortDirection))
+            .isIn(Object.values(SortDirection).map(v => v.toLowerCase()))
             .withMessage(
                 `Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`,
             )

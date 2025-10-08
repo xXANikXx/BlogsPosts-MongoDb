@@ -7,6 +7,10 @@ import { postService } from "../../../posts/application/posts.service";
 import { PostQueryInput } from "../../../posts/routers/input/post-query.input";
 import { HttpStatus } from "../../../core/typesAny/http-statuses";
 import { DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER } from "../../../core/middlewares/validation/query-pagination-sorting.validation-middleware";
+import { matchedData } from "express-validator";
+import {
+    setDefaultSortAndPaginationIfNotExist
+} from "../../../core/helpers/set-default-sort-and-pagination";
 
 
 export async function getBlogPostListHandler(
@@ -15,13 +19,13 @@ export async function getBlogPostListHandler(
 ) {
     try {
         const blogId = req.params.id;
-        const queryInput = req.query;
 
-        const pageNumber = Number(queryInput.pageNumber) || DEFAULT_PAGE_NUMBER;
-        const pageSize = Number(queryInput.pageSize) || DEFAULT_PAGE_SIZE;
+        const sanitizedQuery = matchedData<PostQueryInput>(req, {
+            locations: ['query'],
+            includeOptionals: true,
+        })
+        const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery);
 
-        queryInput.pageNumber = pageNumber;
-        queryInput.pageSize = pageSize;
 
         const { items, totalCount } = await postService.findPostsByBlog(
             queryInput,
@@ -30,8 +34,8 @@ export async function getBlogPostListHandler(
 
 
         const postListOutput = mapToPostListPaginatedOutput(items, {
-            pageNumber: pageNumber, // Используем проверенное число
-            pageSize: pageSize,     // Используем проверенное число
+            pageNumber: queryInput.pageNumber,
+            pageSize: queryInput.pageSize,
             totalCount,
         });
 
