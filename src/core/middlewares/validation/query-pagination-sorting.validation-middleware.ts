@@ -47,7 +47,9 @@ export function paginationAndSortingValidation<T extends string>(
         query('sortDirection')
             .optional({ values: 'falsy' })
             .default(DEFAULT_SORT_DIRECTION)
-            .isIn(Object.values(SortDirection).map(v => v.toLowerCase()))
+            .trim()
+            .toLowerCase()
+            .isIn(Object.values(SortDirection))
             .withMessage(
                 `Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`,
             )

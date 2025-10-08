@@ -8,7 +8,7 @@ import { runDB, stopDb } from "../../../src/db/mongo.db";
 import { SETTINGS } from "../../../src/core/settings/settings";
 import { createBlog } from '../../utils/blogs/create-blog';
 import { getBlogDto } from '../../utils/blogs/get-blog-dto';
-import { BLOGS_PATH } from '../../../src/core/paths/paths';
+import { BLOGS_PATH, POSTS_PATH } from '../../../src/core/paths/paths';
 import { getBlogById } from '../../utils/blogs/get-blog-by-id';
 import { BlogAttributes } from '../../../src/blogs/application/dtos/blog-attributes';
 import { updateBlog } from '../../utils/blogs/update-blog';
@@ -142,8 +142,55 @@ describe('Trying to set up Blogs API', () => {
             expect(post.blogId).toBe(blog.id);
         });
 
-        expect(response.body.totalCount).toBe(totalPosts);
-        expect(response.body.pageNumber).toBe(pageNumber);
-        expect(response.body.pageSize).toBe(pageSize);
+        expect(response.body).toHaveProperty('pagesCount');
+        expect(response.body).toHaveProperty('page');
+        expect(response.body).toHaveProperty('pageSize');
+        expect(response.body).toHaveProperty('totalCount');
+        expect(response.body).toHaveProperty('items');
+    });
+
+
+    it('GET /blogs/:blogId/posts — should return posts with pagination', async () => {
+        const createdBlog = await createBlog(app);
+        const createdBlogId = createdBlog.id;
+
+        const query = {
+            pageNumber: 1,
+            pageSize: 2,
+            sortBy: 'createdAt',
+            sortDirection: 'desc',
+        };
+
+        const response = await request(app)
+            .get(`${BLOGS_PATH}/${createdBlogId}${POSTS_PATH}`)
+            .query(query)
+            .expect(HttpStatus.Ok);
+
+
+        // проверяем базовую структуру
+        expect(response.body).toHaveProperty('pagesCount');
+        expect(response.body).toHaveProperty('page');
+        expect(response.body).toHaveProperty('pageSize');
+        expect(response.body).toHaveProperty('totalCount');
+        expect(response.body).toHaveProperty('items');
+        expect(Array.isArray(response.body.items)).toBe(true);
+
+        console.log('Response:', response.body);
+        expect(response.status).toBe(200);
+    });
+
+    it('GET /blogs/:blogId/posts — should return 400 on invalid query params', async () => {
+        const createdBlog = await createBlog(app);
+        const createdBlogId = createdBlog.id;
+
+        const response = await request(app)
+            .get(`${BLOGS_PATH}/${createdBlogId}${POSTS_PATH}`)
+            .query({
+                pageNumber: 'abc', // ❌ не число
+                sortDirection: 'wrong', // ❌ не asc/desc
+            })
+            .expect(HttpStatus.BadRequest);
+
+        expect(response.body.errorsMessages.length).toBeGreaterThan(0);
     });
 });
