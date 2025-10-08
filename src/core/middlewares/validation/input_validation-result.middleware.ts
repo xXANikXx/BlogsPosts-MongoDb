@@ -31,9 +31,9 @@ export const inputValidationResultMiddleware = (
     next: NextFunction,
 ) => {
 
-    console.log('QUERY PARAMS:', req.query);
-    console.log('BODY:', req.body);
-    console.log('PARAMS:', req.params);
+    // console.log('QUERY PARAMS:', req.query);
+    // console.log('BODY:', req.body);
+    // console.log('PARAMS:', req.params);
 
 
     const errors = validationResult(req)
@@ -41,7 +41,7 @@ export const inputValidationResultMiddleware = (
         array({ onlyFirstError: true });
 
     if (errors.length > 0) {
-        console.log('VALIDATION ERRORS:', errors);
+        // console.log('VALIDATION ERRORS:', errors);
         res.status(HttpStatus.BadRequest).json({ errorsMessages: errors });
         return;
     }

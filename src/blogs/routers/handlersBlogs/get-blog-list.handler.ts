@@ -18,12 +18,12 @@ export async function getBlogListHandler(
     res: Response,) {
     try {
 
-        const sanitizedQuery = matchedData<BlogQueryInput>(_req, {
+
+        const queryInput: BlogQueryInput = matchedData<BlogQueryInput>(_req, {
             locations: ['query'],
             includeOptionals: true,
         }); //утилита для извечения трансформированных значений после валидатара
         //в req.query остаются сырые квери параметры (строки)
-        const queryInput = setDefaultSortAndPaginationIfNotExist(sanitizedQuery);
 
         const { items, totalCount } = await blogsService.findMany(queryInput)
 

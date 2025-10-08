@@ -19,14 +19,15 @@ export const blogsRepository = {
 
         const sortValue = sortDirection === 'asc' ? 1 : -1;
 
-
         const skip = (pageNumber - 1) * pageSize;
         const filter: any = {};
 
-        if (searchNameTerm) {
-
-            filter.name = filter.name = { $regex: searchNameTerm, $options: "i" };;
+        if (searchNameTerm && searchNameTerm.trim() !== '') {
+            // Устанавливаем фильтр $regex с опцией 'i' для нечувствительности к регистру
+            filter.name = { $regex: searchNameTerm, $options: "i" };
+            console.log('DEBUG: Filter applied:', JSON.stringify(filter));
         }
+
 
         const items = await blogCollection
             .find(filter)

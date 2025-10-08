@@ -34,15 +34,14 @@ export function paginationAndSortingValidation<T extends string>(
             .default(DEFAULT_PAGE_NUMBER)
             .toInt()
             .isInt({ min: 1 })
-            .withMessage('Page number must be a positive integer')
-            .toInt(),
+            .withMessage('Page number must be a positive integer'),
 
         query('pageSize')
             .optional({ values: 'falsy' })
             .default(DEFAULT_PAGE_SIZE)
+            .toInt()
             .isInt({ min: 1, max: 100 })
-            .withMessage('Page size must be between 1 and 100')
-            .toInt(),
+            .withMessage('Page size must be between 1 and 100'),
 
         query('sortBy')
             .optional({ values: 'falsy' })
@@ -55,9 +54,9 @@ export function paginationAndSortingValidation<T extends string>(
 
         query('sortDirection')
             .optional({ values: 'falsy' })
-            .customSanitizer((value) => value?.toLowerCase())
+            .trim()
             .default(DEFAULT_SORT_DIRECTION)
-            .isIn(Object.values(SortDirection))
+            .isIn(['asc', 'desc'])
             .withMessage(
                 `Sort direction must be one of: ${Object.values(SortDirection).join(', ')}`,
             )

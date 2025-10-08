@@ -17,6 +17,7 @@ export const postsRepository = {
             sortBy,
             sortDirection
         } = queryDto;
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
 
         const filter = {};
         const skip = (pageNumber - 1) * pageSize;
@@ -24,7 +25,7 @@ export const postsRepository = {
         const [items, totalCount] = await Promise.all([
             postCollection
                 .find(filter)
-                .sort({ [sortBy]: sortDirection })
+                .sort({ [sortBy]: sortValue })
                 .skip(skip)
                 .limit(pageSize)
                 .toArray(),
@@ -94,6 +95,7 @@ export const postsRepository = {
             sortBy,
             sortDirection
         } = queryDto;
+        const sortValue = sortDirection === 'asc' ? 1 : -1;
 
         const filter = { 'blogId': blogId };
         const skip = (pageNumber - 1) * pageSize;
@@ -102,7 +104,7 @@ export const postsRepository = {
         const [items, totalCount] = await Promise.all([
             postCollection
                 .find(filter)
-                .sort({ [sortBy]: sortDirection })
+                .sort({ [sortBy]: sortValue })
                 .skip(skip)
                 .limit(pageSize)
                 .toArray(),

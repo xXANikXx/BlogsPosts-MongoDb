@@ -15,6 +15,9 @@ import { updateBlog } from '../../utils/blogs/update-blog';
 import { BlogUpdateInput } from '../../../src/blogs/routers/input/blog-update.input';
 import { createPost } from '../../utils/posts/create-post';
 import { PostOutput } from '../../../src/posts/routers/output/post.output';
+import { BlogOutput } from '../../../src/blogs/routers/output/blog.output';
+
+let createdBlogs: BlogOutput[] = [];
 
 describe('Trying to set up Blogs API', () => {
     const app = express();
@@ -274,29 +277,74 @@ describe('Trying to set up Blogs API', () => {
     });
 
 
-    it('should return blogs with pagination', async () => {
+    it('should create 12 blogs (4 matching "Tim", 8 non-matching)', async () => {
+        const blogNamesToMatch = ['Tim', 'Tima', 'Timma', 'Timm'];
+        const blogNamesToExclude = ['Alex', 'Alexey', 'Andrey', 'Dima', 'Don', 'Zebra', 'Apple', 'Banana'];
 
-        // создаем 12 блогов
-        for (let i = 0; i < 12; i++) {
-            await createBlog(app, { name: `Tim${i}`, description: 'desc', websiteUrl: 'https://someurl.com' });
+        // Создаем все блоги
+        for (const name of [...blogNamesToMatch, ...blogNamesToExclude]) {
+            const blog = await createBlog(app, {
+                ...getBlogDto(), // базовые поля
+                name,            // заменяем только имя
+            });
+            createdBlogs.push(blog);
         }
 
+        expect(createdBlogs.length).toBe(12);
+    });
+
+
+    // Воспроизводим проблемный GET-запрос
+    it('should return 4 blogs, filtered by "Tim" and sorted by "name" ascending', async () => {
+        const queryParams = 'pageSize=5&pageNumber=1&searchNameTerm=Tim&sortDirection=asc&sortBy=name';
+
+        const expectedItems = createdBlogs
+            .filter(b => b.name.toLowerCase().includes('tim')) // Имитация фильтра
+            .sort((a, b) => a.name.localeCompare(b.name))      // Имитация сортировки по имени asc
+            .map(b => ({
+                // Оставляем только те поля, которые проверяются
+                id: b.id,
+                name: b.name,
+                description: b.description,
+                websiteUrl: b.websiteUrl,
+                createdAt: b.createdAt,
+                isMembership: b.isMembership
+            }));
+
+        const expectedOutput = {
+            pagesCount: 1,      // 4 / 5 = 1
+            page: 1,
+            pageSize: 5,
+            totalCount: 4,      // Ожидаемый totalCount
+            items: expectedItems.slice(0, 5), // Первые 5 (все 4) элемента
+        };
+
+
         const response = await request(app)
-            .get('/blogs')
-            .query({
-                pageSize: 5,
-                pageNumber: 1,
-                searchNameTerm: 'Tim',
-                sortDirection: 'asc',
-                sortBy: 'name',
-            })
-            .expect(200);
+            .get(`${BLOGS_PATH}?${queryParams}`)
+            .expect(HttpStatus.Ok);
 
-        console.log('DATA:', response.body);
+        const receivedData = response.body;
 
-        expect(response.body.pageSize).toBe(5);
-        expect(response.body.page).toBe(1);
-        expect(response.body.items.length).toBeLessThanOrEqual(5);
+        console.log('--- E2E Debug Output ---');
+        console.log('Received Total Count:', receivedData.totalCount);
+        console.log('Received Items (Names):', receivedData.items.map((i: any) => i.name));
+        console.log('-------------------------');
+
+
+        // 1. Проверяем, что фильтр СРАБОТАЛ (totalCount=4)
+        expect(receivedData.totalCount).toBe(expectedOutput.totalCount);
+        expect(receivedData.pagesCount).toBe(expectedOutput.pagesCount);
+
+        // 2. Проверяем, что сортировка и пагинация СРАБОТАЛИ
+        expect(receivedData.items.length).toBe(expectedOutput.items.length);
+
+        // Используем 'toEqual' для сравнения структуры и порядка
+        // ВНИМАНИЕ: createdAt и ID будут отличаться, поэтому нужно сравнивать только ключевые поля
+        const receivedNames = receivedData.items.map((i: any) => i.name);
+        const expectedNames = expectedOutput.items.map((i: any) => i.name);
+
+        expect(receivedNames).toEqual(expectedNames);
     });
 
 
