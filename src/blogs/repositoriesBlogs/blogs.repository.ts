@@ -10,8 +10,8 @@ export const blogsRepository = {
         queryDto: BlogQueryInput,
     ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
         const {
-            pageNumber,
-            pageSize,
+            pageNumber = 1,
+            pageSize = 10,
             sortBy = 'createdAt',
             sortDirection = 'desc',
             searchNameTerm,
