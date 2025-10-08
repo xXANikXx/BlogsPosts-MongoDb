@@ -17,8 +17,8 @@ export const blogsRepository = {
             searchNameTerm,
         } = queryDto;
 
-        const finalPageNumber = parseInt(pageNumber as any, 10);
-        const finalPageSize = parseInt(pageSize as any, 10);
+        const finalPageNumber = pageNumber; // Предполагаем, что это число
+        const finalPageSize = pageSize;     // Предполагаем, что это число
 
         const sortValue = sortDirection === 'asc' ? 1 : -1;
 

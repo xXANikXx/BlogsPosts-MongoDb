@@ -25,11 +25,25 @@ export async function getBlogListHandler(
         }); //утилита для извечения трансформированных значений после валидатара
         //в req.query остаются сырые квери параметры (строки)
 
-        const { items, totalCount } = await blogsService.findMany(queryInput)
+        console.log('Matched data:', queryInput);
+
+        const finalPageNumber = queryInput.pageNumber || 1;
+        const finalPageSize = queryInput.pageSize || 10;
+
+        const queryWithDefaults: BlogQueryInput = {
+            ...queryInput,
+            pageNumber: finalPageNumber,
+            pageSize: finalPageSize,
+        };
+
+        const { items, totalCount } = await blogsService.findMany(queryWithDefaults)
+
+        console.log('🧩 QUERY INPUT BEFORE MAPPER:', queryInput);
+
 
         const blogListOutput = mapToBlogListPaginatedOutput(items, {
-            pageNumber: queryInput.pageNumber,
-            pageSize: queryInput.pageSize,
+            pageNumber: finalPageNumber,
+            pageSize: finalPageSize,
             totalCount,
         });
 

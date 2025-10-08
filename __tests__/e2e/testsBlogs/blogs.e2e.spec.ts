@@ -355,4 +355,40 @@ describe('Trying to set up Blogs API', () => {
     });
 
 
+    it("should return blogs with correct pagination meta", async () => {
+        // 1️⃣ создаём 12 блогов для проверки
+        for (let i = 1; i <= 12; i++) {
+            await request(app)
+                .post("/blogs")
+                .auth("admin", "qwerty")
+                .send({
+                    name: `Blog ${i}`,
+                    description: "desc",
+                    websiteUrl: "https://example.com",
+                })
+                .expect(201);
+        }
+
+        // 2️⃣ получаем список без queryParams
+        const response = await request(app)
+            .get("/blogs")
+            .expect(200);
+
+        // 3️⃣ проверяем структуру
+        const body = response.body;
+        expect(body).toHaveProperty("pagesCount");
+        expect(body).toHaveProperty("page");
+        expect(body).toHaveProperty("pageSize");
+        expect(body).toHaveProperty("totalCount");
+        expect(body).toHaveProperty("items");
+
+        // 4️⃣ убеждаемся, что pagination рассчиталась корректно
+        expect(body.totalCount).toBe(12);
+        expect(body.page).toBe(1);
+        expect(body.pageSize).toBe(10);
+        expect(body.pagesCount).toBe(2);
+        expect(Array.isArray(body.items)).toBe(true);
+        expect(body.items.length).toBe(10);
+    });
+
 });
